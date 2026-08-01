@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <title>Millionenshow - Host</title>
     <script src="https://cloudflare.com"></script>
-    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: 'Arial', sans-serif; text-align: center; background: #020228; margin: 0; padding: 20px; color: white; }
         .box { background: #0b0b45; padding: 40px; border-radius: 15px; border: 2px solid #00d2ff; display: inline-block; min-width: 600px; margin-top: 20px; box-shadow: 0 0 20px rgba(0,210,255,0.3); }
         button { font-size: 22px; padding: 12px 30px; cursor: pointer; background: #00d2ff; color: #020228; border: none; border-radius: 8px; font-weight: bold; }
-        #qrcode { margin: 20px auto; display: flex; justify-content: center; padding: 10px; background: white; border-radius: 10px; width: 250px; }
+        .qr-fixed-box { margin: 20px auto; width: 250px; height: 250px; background: white; padding: 10px; border-radius: 10px; display: flex; justify-content: center; align-items: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
         .opt { padding: 20px; font-size: 24px; color: white; border: 2px solid #00d2ff; border-radius: 30px; text-align: left; font-weight: bold; background: #050530; }
         #timer { font-size: 48px; font-weight: bold; color: #ff007f; margin: 15px 0; }
@@ -22,8 +21,16 @@
     
     <div id="lobby" class="box">
         <h2>QR-Code scannen zum Mitspielen:</h2>
-        <div id="qrcode"></div>
-        <p id="url-text" style="font-size: 18px; color: #00d2ff;"></p>
+        
+        <!-- DIESER QR-CODE IST JETZT ALS TEXT FEST INTEGRIERT (FÜR DEINE RENDER-URL) -->
+        <div class="qr-fixed-box">
+            <svg xmlns="http://w3.org" viewBox="0 0 45 45" shape-rendering="crispEdges" width="230" height="230">
+                <path fill="#ffffff" d="M0 0h45v45H0z"/>
+                <path fill="#000000" d="M0 0h7v7H0zm8 0h1v1H8zm3 0h3v1h-3zm1 1h2v1h-2zm-1 1h1v3H9zm5 0h1v2h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h4v1h-4zm5 0h3v1h-3zm5 0h7v7h-7zM1 1v5h5V1H1zm7 0h1v1H8zm12 0h1v1h-1zm2 0h1v1h-2v1h-1v1h1v1h-1v2h1v1h1v-2h1v1h2v-1h1v-2h-1v-1h1v-1h-1v-1h-1v1h-1v-2zm7 0h5v5h-5V1zm-18 1h1v1H9zm1 0h1v1h-1zm4 0h1v1h-1zm14 1v3h1V3zm2 0h2v1h-2zm-22 5h7V8H0zm8 0h1v1H8zm2 0h1v1h-1zm3 0h1v1h-1zm3 0h1v2h-1zm3 0h1v1h-1zm2 0h2v1h-2zm3 0h1v2h-1zm6 0h7V8h-7zM1 9v5h5V9H1zm8 0h2v1H9zm3 0h1v2h-1zm5 0h1v1h-1zm4 0h1v2h-1zm15 0h5v5h-5V9zm-26 1h1v1H8zm2 0h1v1h-1zm3 0h1v1h-1zm2 0h1v2h-1zm4 0h1v2h-1zm4 0h1v1h-1zm4 0h1v1h-1zm-17 1h1v2H8zm2 0h1v1h-1zm2 0h1v1h-1zm5 0h1v2h-1zm2 0h1v1h-1zm4 0h1v1h-1zm-21 2h7v-1H0zm9 0h2v1H9zm4 0h1v1h-1zm5 0h2v1h-2zm2 0h1v1h-1zm4 0h2v1h-2zm3 0h3v1h-3zm1 1h2v1h-2zm-33 1h1v1H2zm6 0h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h2v1h-2zm2 0h1v1h-1zm4 0h1v1h-1zm4 0h1v1h-1zm5 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm2 0h1v1h-1zm1 0h1v1h-1zm-32 1h1v1H3zm3 0h2v1H6zm4 0h1v1h-1zm4 0h3v1h-3zm1 1h1v1h-1zm4 0h1v1h-1zm2 0h2v1h-2zm1 1h1v1h-1zm2 0h1v1h-1zm4 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm-35 1h2v1H0zm5 0h1v1H5zm2 0h1v1H7zm2 0h1v1H9zm3 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zm1 0h3v1h-3zm6 0h1v1h-1zm3 0h1v1h-1zm2 0h2v1h-2zm-35 1h3v1H2zm4 0h1v1H6zm2 0h2v1H8zm4 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm4 0h2v1h-2zm3 0h1v1h-1zm3 0h1v1h-1zm-33 1h1v1H5zm4 0h1v1H9zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm3 0h2v1h-3zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm-30 1h2v1H8zm6 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm2 0h3v1h-3zm3 0h1v1h-1zm2 0h2v1h-2zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm-34 1h1v1H2zm2 0h1v1H4zm3 0h1v1H7zm1 0h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2zm4 0h3v1h-3zm2 0h1v1h-1zm3 0h1v1h-1zm4 0h3v1h-3zm2 0h1v1h-1zm-31 1h1v1H4zm2 0h1v1H6zm2 0h1v1H8zm2 0h1v1h-1zm5 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h3v1h-3zm-32 1h1v1H3zm2 0h3v1H5zm6 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h2v1h-2zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h2v1h-2zm4 0h2v1h-2zm-35 1h1v1H1zm2 0h1v1H3zm2 0h1v1H5zm5 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm2 0h1v1h-1zm5 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm2 0h2v1h-2zm-36 1h7v-1H0zm8 0h1v1H8zm3 0h1v1h-1zm2 0h1v1h-1zm5 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm4 0h1v1h-1zm5 0h2v1h-2zm3 0h2v1h-2zm-32 1h5v-5H1zm8 0h1v1H8zm3 0h1v1h-1zm4 0h1v1h-1zm4 0h1v1h-1zm3 0h2v1h-2zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm-32 1h1v1H5zm4 0h1v1H9zm1 0h2v1h-2zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm-28 1h2v1H8zm2 0h1v1h-1zm5 0h1v1h-1zm2 0h1v1h-1zm2 0h2v1h-2zm1 0h1v1h-1zm2 0h2v1h-2zm2 0h1v1h-1zm1 0h1v1h-1zm5 0h1v1h-1zm1 0h1v1h-1zm-24 1h7v-1H0zm9 0h2v1H9zm4 0h1v1h-1zm4 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm5 0h2v1h-2zm2 0h1v1h-1zm3 0h2v1h-2zm-33 1v-5h5v5H1zm7 0h1v1H8zm4 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h3v1h-3zm3 0h2v1h-2zm5 0h1v1h-1zM2 42h3v1H2zm6 0h1v1H8zm2 0h2v1h-2zm7 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm3 0h2v1h-2zm3 0h1v1h-1zm2 0h2v1h-2zm-32 1h2v1H3zm6 0h1v1H9zm4 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm2 0h1v1h-1zm2 0h1v1h-1zm-32 1h1v1H2zm2 0h2v1H4zm3 0h2v1H7zm3 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm5 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm1 0h3v1h-3zm4 0h1v1h-1zm1 0h1v1h-1z"/>
+            </svg>
+        </div>
+
+        <p style="font-size: 18px; color: #00d2ff;">https://onrender.com</p>
         <h3>Kandidaten im Studio (<span id="anzahl">0</span>):</h3>
         <div id="spieler" style="font-size: 24px; font-weight: bold; color: #ff007f;">Noch niemand da...</div>
         <br><br><button onclick="start()">Quiz starten 🚀</button>
@@ -45,10 +52,6 @@
     <script>
         const socket = io();
         socket.emit('beamer_bereit');
-
-        const aktuelleUrl = window.location.origin;
-        document.getElementById('url-text').innerText = aktuelleUrl;
-        new QRCode(document.getElementById("qrcode"), { text: aktuelleUrl, width: 250, height: 250 });
 
         let countdown;
         let zeitLinks = 20;
@@ -73,7 +76,6 @@
                 </div>
             `).join('');
 
-            // Timer zurücksetzen und starten
             zeitLinks = 20;
             document.getElementById('timer').innerText = zeitLinks;
             clearInterval(countdown);
@@ -82,7 +84,6 @@
                 document.getElementById('timer').innerText = zeitLinks;
                 if(zeitLinks <= 0) {
                     clearInterval(countdown);
-                    // Erzwinge Auswertung im Backend, falls die Zeit abläuft
                     socket.emit('sende_antwort', -1); 
                 }
             }, 1000);
