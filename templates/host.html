@@ -2,110 +2,247 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Millionenshow - Host</title>
-    <script src="https://cloudflare.com"></script>
+    <title>Quiz Master - Beamer</title>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
-        body { font-family: 'Arial', sans-serif; text-align: center; background: #020228; margin: 0; padding: 20px; color: white; }
-        .box { background: #0b0b45; padding: 40px; border-radius: 15px; border: 2px solid #00d2ff; display: inline-block; min-width: 600px; margin-top: 20px; box-shadow: 0 0 20px rgba(0,210,255,0.3); }
-        button { font-size: 22px; padding: 12px 30px; cursor: pointer; background: #00d2ff; color: #020228; border: none; border-radius: 8px; font-weight: bold; }
-        .qr-fixed-box { margin: 20px auto; width: 250px; height: 250px; background: white; padding: 10px; border-radius: 10px; display: flex; justify-content: center; align-items: center; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
-        .opt { padding: 20px; font-size: 24px; color: white; border: 2px solid #00d2ff; border-radius: 30px; text-align: left; font-weight: bold; background: #050530; }
-        #timer { font-size: 48px; font-weight: bold; color: #ff007f; margin: 15px 0; }
-        ol { text-align: left; font-size: 22px; max-width: 400px; margin: 20px auto; }
-        li { padding: 8px 0; border-bottom: 1px solid #00d2ff33; }
+        body{
+            font-family:Arial,sans-serif;
+            text-align:center;
+            background:#f4f4f9;
+            margin:0;
+            padding:20px;
+            color:#333;
+        }
+
+        .box{
+            background:white;
+            padding:40px;
+            border-radius:18px;
+            box-shadow:0 5px 20px rgba(0,0,0,.12);
+            display:inline-block;
+            min-width:550px;
+            margin-top:20px;
+        }
+
+        button{
+            font-size:22px;
+            padding:12px 30px;
+            cursor:pointer;
+            background:#46178f;
+            color:white;
+            border:none;
+            border-radius:10px;
+            font-weight:bold;
+        }
+
+        #qrcode{
+            margin:25px auto;
+            background:white;
+            padding:20px;
+            border-radius:20px;
+            width:fit-content;
+            box-shadow:0 3px 12px rgba(0,0,0,.15);
+        }
+
+        #qrcode img,
+        #qrcode canvas{
+            display:block;
+            width:320px !important;
+            height:320px !important;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:15px;
+            margin-top:30px;
+        }
+
+        .opt{
+            padding:20px;
+            font-size:24px;
+            color:white;
+            border-radius:8px;
+            text-align:left;
+            font-weight:bold;
+        }
+
+        .opt-0{background:#e21b3c;}
+        .opt-1{background:#1368ce;}
+        .opt-2{background:#d89e00;}
+        .opt-3{background:#26890c;}
+
+        ol{
+            text-align:left;
+            font-size:22px;
+            max-width:350px;
+            margin:20px auto;
+        }
+
+        li{
+            padding:6px 0;
+        }
+
+        #url-text{
+            font-size:22px;
+            font-weight:bold;
+            color:#46178f;
+        }
     </style>
 </head>
+
 <body>
-    <h1>💵 DIE MILLIONENSHOW 💵</h1>
-    
-    <div id="lobby" class="box">
-        <h2>QR-Code scannen zum Mitspielen:</h2>
-        
-        <!-- DIESER QR-CODE IST JETZT ALS TEXT FEST INTEGRIERT (FÜR DEINE RENDER-URL) -->
-        <div class="qr-fixed-box">
-            <svg xmlns="http://w3.org" viewBox="0 0 45 45" shape-rendering="crispEdges" width="230" height="230">
-                <path fill="#ffffff" d="M0 0h45v45H0z"/>
-                <path fill="#000000" d="M0 0h7v7H0zm8 0h1v1H8zm3 0h3v1h-3zm1 1h2v1h-2zm-1 1h1v3H9zm5 0h1v2h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h4v1h-4zm5 0h3v1h-3zm5 0h7v7h-7zM1 1v5h5V1H1zm7 0h1v1H8zm12 0h1v1h-1zm2 0h1v1h-2v1h-1v1h1v1h-1v2h1v1h1v-2h1v1h2v-1h1v-2h-1v-1h1v-1h-1v-1h-1v1h-1v-2zm7 0h5v5h-5V1zm-18 1h1v1H9zm1 0h1v1h-1zm4 0h1v1h-1zm14 1v3h1V3zm2 0h2v1h-2zm-22 5h7V8H0zm8 0h1v1H8zm2 0h1v1h-1zm3 0h1v1h-1zm3 0h1v2h-1zm3 0h1v1h-1zm2 0h2v1h-2zm3 0h1v2h-1zm6 0h7V8h-7zM1 9v5h5V9H1zm8 0h2v1H9zm3 0h1v2h-1zm5 0h1v1h-1zm4 0h1v2h-1zm15 0h5v5h-5V9zm-26 1h1v1H8zm2 0h1v1h-1zm3 0h1v1h-1zm2 0h1v2h-1zm4 0h1v2h-1zm4 0h1v1h-1zm4 0h1v1h-1zm-17 1h1v2H8zm2 0h1v1h-1zm2 0h1v1h-1zm5 0h1v2h-1zm2 0h1v1h-1zm4 0h1v1h-1zm-21 2h7v-1H0zm9 0h2v1H9zm4 0h1v1h-1zm5 0h2v1h-2zm2 0h1v1h-1zm4 0h2v1h-2zm3 0h3v1h-3zm1 1h2v1h-2zm-33 1h1v1H2zm6 0h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h2v1h-2zm2 0h1v1h-1zm4 0h1v1h-1zm4 0h1v1h-1zm5 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm2 0h1v1h-1zm1 0h1v1h-1zm-32 1h1v1H3zm3 0h2v1H6zm4 0h1v1h-1zm4 0h3v1h-3zm1 1h1v1h-1zm4 0h1v1h-1zm2 0h2v1h-2zm1 1h1v1h-1zm2 0h1v1h-1zm4 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm-35 1h2v1H0zm5 0h1v1H5zm2 0h1v1H7zm2 0h1v1H9zm3 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zm1 0h3v1h-3zm6 0h1v1h-1zm3 0h1v1h-1zm2 0h2v1h-2zm-35 1h3v1H2zm4 0h1v1H6zm2 0h2v1H8zm4 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm4 0h2v1h-2zm3 0h1v1h-1zm3 0h1v1h-1zm-33 1h1v1H5zm4 0h1v1H9zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm3 0h2v1h-3zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm-30 1h2v1H8zm6 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm2 0h3v1h-3zm3 0h1v1h-1zm2 0h2v1h-2zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm-34 1h1v1H2zm2 0h1v1H4zm3 0h1v1H7zm1 0h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2zm4 0h3v1h-3zm2 0h1v1h-1zm3 0h1v1h-1zm4 0h3v1h-3zm2 0h1v1h-1zm-31 1h1v1H4zm2 0h1v1H6zm2 0h1v1H8zm2 0h1v1h-1zm5 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm3 0h1v1h-1zm2 0h3v1h-3zm-32 1h1v1H3zm2 0h3v1H5zm6 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h2v1h-2zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h2v1h-2zm4 0h2v1h-2zm-35 1h1v1H1zm2 0h1v1H3zm2 0h1v1H5zm5 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm2 0h1v1h-1zm5 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm2 0h2v1h-2zm-36 1h7v-1H0zm8 0h1v1H8zm3 0h1v1h-1zm2 0h1v1h-1zm5 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm4 0h1v1h-1zm5 0h2v1h-2zm3 0h2v1h-2zm-32 1h5v-5H1zm8 0h1v1H8zm3 0h1v1h-1zm4 0h1v1h-1zm4 0h1v1h-1zm3 0h2v1h-2zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm-32 1h1v1H5zm4 0h1v1H9zm1 0h2v1h-2zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm-28 1h2v1H8zm2 0h1v1h-1zm5 0h1v1h-1zm2 0h1v1h-1zm2 0h2v1h-2zm1 0h1v1h-1zm2 0h2v1h-2zm2 0h1v1h-1zm1 0h1v1h-1zm5 0h1v1h-1zm1 0h1v1h-1zm-24 1h7v-1H0zm9 0h2v1H9zm4 0h1v1h-1zm4 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm5 0h2v1h-2zm2 0h1v1h-1zm3 0h2v1h-2zm-33 1v-5h5v5H1zm7 0h1v1H8zm4 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h3v1h-3zm3 0h2v1h-2zm5 0h1v1h-1zM2 42h3v1H2zm6 0h1v1H8zm2 0h2v1h-2zm7 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm3 0h2v1h-2zm3 0h1v1h-1zm2 0h2v1h-2zm-32 1h2v1H3zm6 0h1v1H9zm4 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm1 0h2v1h-2zm2 0h1v1h-1zm2 0h1v1h-1zm-32 1h1v1H2zm2 0h2v1H4zm3 0h2v1H7zm3 0h1v1h-1zm1 0h1v1h-1zm2 0h2v1h-2zm5 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm1 0h3v1h-3zm4 0h1v1h-1zm1 0h1v1h-1z"/>
-            </svg>
+
+<h1>Python Kahoot 🐍</h1>
+
+<div id="lobby" class="box">
+
+    <h2>QR-Code scannen zum Mitspielen</h2>
+
+    <div id="qrcode"></div>
+
+    <p id="url-text"></p>
+
+    <h3>Mitspieler (<span id="anzahl">0</span>)</h3>
+
+    <div id="spieler"
+         style="font-size:20px;font-weight:bold;color:#46178f;">
+        Noch niemand da...
+    </div>
+
+    <br><br>
+
+    <button onclick="start()">
+        Spiel starten
+    </button>
+
+</div>
+
+<div id="spiel" class="box" style="display:none;">
+
+    <h2 id="frage-text" style="font-size:32px;">
+        Frage lädt...
+    </h2>
+
+    <div id="optionen" class="grid"></div>
+
+</div>
+
+<div id="auswertung" class="box" style="display:none;">
+
+    <h2 id="ergebnis-text"></h2>
+
+    <h3>Bestenliste</h3>
+
+    <ol id="rangliste"></ol>
+
+    <br>
+
+    <button onclick="start()">
+        Nächste Frage
+    </button>
+
+</div>
+
+<script>
+
+const socket = io();
+
+socket.emit("beamer_bereit");
+
+const quizURL = "https://online-quiz.kallingerflorian.at";
+
+document.getElementById("url-text").innerText = quizURL;
+
+document.getElementById("qrcode").innerHTML = "";
+
+new QRCode(document.getElementById("qrcode"),{
+    text:quizURL,
+    width:320,
+    height:320,
+    colorDark:"#000000",
+    colorLight:"#ffffff",
+    correctLevel:QRCode.CorrectLevel.H
+});
+
+socket.on("spieler_liste",(liste)=>{
+
+    document.getElementById("anzahl").innerText=liste.length;
+
+    document.getElementById("spieler").innerText=
+        liste.join(", ") || "Noch niemand da...";
+
+});
+
+function start(){
+
+    socket.emit("naechste_frage");
+
+}
+
+socket.on("starte_frage",(daten)=>{
+
+    document.getElementById("lobby").style.display="none";
+    document.getElementById("auswertung").style.display="none";
+    document.getElementById("spiel").style.display="block";
+
+    document.getElementById("frage-text").innerText=daten.frage;
+
+    document.getElementById("optionen").innerHTML=
+        daten.optionen.map((o,i)=>`
+        <div class="opt opt-${i}">
+        ${i==0?"▲":i==1?"◆":i==2?"●":"■"} ${o}
         </div>
+        `).join("");
 
-        <p style="font-size: 18px; color: #00d2ff;">https://onrender.com</p>
-        <h3>Kandidaten im Studio (<span id="anzahl">0</span>):</h3>
-        <div id="spieler" style="font-size: 24px; font-weight: bold; color: #ff007f;">Noch niemand da...</div>
-        <br><br><button onclick="start()">Quiz starten 🚀</button>
-    </div>
+});
 
-    <div id="spiel" class="box" style="display:none;">
-        <div id="timer">20</div>
-        <h2 id="frage-text" style="font-size: 32px; color: #00d2ff;">Frage lädt...</h2>
-        <div class="grid" id="optionen"></div>
-    </div>
+socket.on("zeige_auswertung",(daten)=>{
 
-    <div id="auswertung" class="box" style="display:none;">
-        <h2 id="ergebnis-text" style="font-size: 28px; color: #00ff66;"></h2>
-        <h3>Zwischenstand / Rangliste:</h3>
-        <ol id="rangliste"></ol>
-        <br><button onclick="start()">Nächste Frage ➔</button>
-    </div>
+    document.getElementById("spiel").style.display="none";
+    document.getElementById("auswertung").style.display="block";
 
-    <script>
-        const socket = io();
-        socket.emit('beamer_bereit');
+    const farben=[
+        "Rot (▲)",
+        "Blau (◆)",
+        "Gelb (●)",
+        "Grün (■)"
+    ];
 
-        let countdown;
-        let zeitLinks = 20;
+    document.getElementById("ergebnis-text").innerText=
+        "Richtige Antwort war: "+farben[daten.korrekt];
 
-        socket.on('spieler_liste', (liste) => {
-            document.getElementById('anzahl').innerText = liste.length;
-            document.getElementById('spieler').innerText = liste.join(', ') || "Noch niemand da...";
-        });
+    document.getElementById("rangliste").innerHTML=
+        daten.rangliste
+        .slice(0,5)
+        .map(s=>`<li>${s.name}: <strong>${s.punkte} Pkt</strong></li>`)
+        .join("");
 
-        function start() { socket.emit('naechste_frage'); }
+});
 
-        socket.on('starte_frage', (daten) => {
-            document.getElementById('lobby').style.display = 'none';
-            document.getElementById('auswertung').style.display = 'none';
-            document.getElementById('spiel').style.display = 'block';
-            document.getElementById('frage-text').innerText = daten.frage;
-            
-            const buchstaben = ["A: ", "B: ", "C: ", "D: "];
-            document.getElementById('optionen').innerHTML = daten.optionen.map((o, i) => `
-                <div class="opt">
-                    <span style="color: #00d2ff;">${buchstaben[i]}</span>${o}
-                </div>
-            `).join('');
+socket.on("spiel_ende",(rangliste)=>{
 
-            zeitLinks = 20;
-            document.getElementById('timer').innerText = zeitLinks;
-            clearInterval(countdown);
-            countdown = setInterval(() => {
-                zeitLinks--;
-                document.getElementById('timer').innerText = zeitLinks;
-                if(zeitLinks <= 0) {
-                    clearInterval(countdown);
-                    socket.emit('sende_antwort', -1); 
-                }
-            }, 1000);
-        });
+    document.getElementById("spiel").style.display="none";
+    document.getElementById("auswertung").style.display="block";
 
-        socket.on('zeige_auswertung', (daten) => {
-            clearInterval(countdown);
-            document.getElementById('spiel').style.display = 'none';
-            document.getElementById('auswertung').style.display = 'block';
-            const buchstaben = ["A", "B", "C", "D"];
-            document.getElementById('ergebnis-text').innerText = `Richtige Antwort war: ${buchstaben[daten.korrekt]}`;
-            document.getElementById('rangliste').innerHTML = daten.rangliste.slice(0, 5).map((s, i) => `<li>#${i+1} ${s.name}: <strong>${s.punkte} Pkt</strong></li>`).join('');
-        });
+    document.getElementById("ergebnis-text").innerText=
+        "Spiel vorbei! 🏆";
 
-        socket.on('spiel_ende', (rangliste) => {
-            clearInterval(countdown);
-            document.getElementById('spiel').style.display = 'none';
-            document.getElementById('auswertung').style.display = 'block';
-            document.getElementById('ergebnis-text').innerText = "FINALE! Wir haben einen Millionär! 🏆";
-            document.getElementById('rangliste').innerHTML = rangliste.map((s, i) => `<li><strong>#${i+1} ${s.name}</strong>: ${s.punkte} Pkt</li>`).join('');
-            document.getElementById('auswertung').getElementsByTagName('button').style.display = 'none';
-        });
-    </script>
+    document.getElementById("rangliste").innerHTML=
+        rangliste.map((s,i)=>
+        `<li><strong>#${i+1} ${s.name}</strong>: ${s.punkte} Pkt</li>`
+        ).join("");
+
+    document
+        .querySelector("#auswertung button")
+        .style.display="none";
+
+});
+
+</script>
+
 </body>
 </html>
