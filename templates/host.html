@@ -2,44 +2,44 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Quiz Master - Beamer</title>
+    <title>Millionenshow - Host</title>
     <script src="https://cloudflare.com"></script>
     <script src="https://cloudflare.com"></script>
     <style>
-        body { font-family: 'Arial', sans-serif; text-align: center; background: #f4f4f9; margin: 0; padding: 20px; color: #333; }
-        .box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; min-width: 500px; margin-top: 20px; }
-        button { font-size: 22px; padding: 12px 30px; cursor: pointer; background: #46178f; color: white; border: none; border-radius: 8px; font-weight: bold; }
-        #qrcode { margin: 20px auto; display: flex; justify-content: center; }
+        body { font-family: 'Arial', sans-serif; text-align: center; background: #020228; margin: 0; padding: 20px; color: white; }
+        .box { background: #0b0b45; padding: 40px; border-radius: 15px; border: 2px solid #00d2ff; display: inline-block; min-width: 600px; margin-top: 20px; box-shadow: 0 0 20px rgba(0,210,255,0.3); }
+        button { font-size: 22px; padding: 12px 30px; cursor: pointer; background: #00d2ff; color: #020228; border: none; border-radius: 8px; font-weight: bold; }
+        #qrcode { margin: 20px auto; display: flex; justify-content: center; padding: 10px; background: white; border-radius: 10px; width: 250px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
-        .opt { padding: 20px; font-size: 24px; color: white; border-radius: 8px; text-align: left; font-weight: bold; }
-        .opt-0 { background: #e21b3c; } .opt-1 { background: #1368ce; }
-        .opt-2 { background: #d89e00; } .opt-3 { background: #26890c; }
-        ol { text-align: left; font-size: 22px; max-width: 300px; margin: 20px auto; }
-        li { padding: 5px 0; }
+        .opt { padding: 20px; font-size: 24px; color: white; border: 2px solid #00d2ff; border-radius: 30px; text-align: left; font-weight: bold; background: #050530; }
+        #timer { font-size: 48px; font-weight: bold; color: #ff007f; margin: 15px 0; }
+        ol { text-align: left; font-size: 22px; max-width: 400px; margin: 20px auto; }
+        li { padding: 8px 0; border-bottom: 1px solid #00d2ff33; }
     </style>
 </head>
 <body>
-    <h1>Python Kahoot 🐍</h1>
+    <h1>💵 DIE MILLIONENSHOW 💵</h1>
     
     <div id="lobby" class="box">
         <h2>QR-Code scannen zum Mitspielen:</h2>
         <div id="qrcode"></div>
-        <p id="url-text" style="font-size: 18px; color: #666;"></p>
-        <h3>Mitspieler (<span id="anzahl">0</span>):</h3>
-        <div id="spieler" style="font-size: 20px; font-weight: bold; color: #46178f;">Noch niemand da...</div>
-        <br><br><button onclick="start()">Spiel starten</button>
+        <p id="url-text" style="font-size: 18px; color: #00d2ff;"></p>
+        <h3>Kandidaten im Studio (<span id="anzahl">0</span>):</h3>
+        <div id="spieler" style="font-size: 24px; font-weight: bold; color: #ff007f;">Noch niemand da...</div>
+        <br><br><button onclick="start()">Quiz starten 🚀</button>
     </div>
 
     <div id="spiel" class="box" style="display:none;">
-        <h2 id="frage-text" style="font-size: 32px;">Frage lädt...</h2>
+        <div id="timer">20</div>
+        <h2 id="frage-text" style="font-size: 32px; color: #00d2ff;">Frage lädt...</h2>
         <div class="grid" id="optionen"></div>
     </div>
 
     <div id="auswertung" class="box" style="display:none;">
-        <h2 id="ergebnis-text" style="font-size: 28px;"></h2>
-        <h3>Bestenliste:</h3>
+        <h2 id="ergebnis-text" style="font-size: 28px; color: #00ff66;"></h2>
+        <h3>Zwischenstand / Rangliste:</h3>
         <ol id="rangliste"></ol>
-        <br><button onclick="start()">Nächste Frage</button>
+        <br><button onclick="start()">Nächste Frage ➔</button>
     </div>
 
     <script>
@@ -49,6 +49,9 @@
         const aktuelleUrl = window.location.origin;
         document.getElementById('url-text').innerText = aktuelleUrl;
         new QRCode(document.getElementById("qrcode"), { text: aktuelleUrl, width: 250, height: 250 });
+
+        let countdown;
+        let zeitLinks = 20;
 
         socket.on('spieler_liste', (liste) => {
             document.getElementById('anzahl').innerText = liste.length;
@@ -62,27 +65,45 @@
             document.getElementById('auswertung').style.display = 'none';
             document.getElementById('spiel').style.display = 'block';
             document.getElementById('frage-text').innerText = daten.frage;
+            
+            const buchstaben = ["A: ", "B: ", "C: ", "D: "];
             document.getElementById('optionen').innerHTML = daten.optionen.map((o, i) => `
-                <div class="opt opt-${i}">
-                    ${i===0?'▲':i===1?'◆':i===2?'●':'■'} ${o}
+                <div class="opt">
+                    <span style="color: #00d2ff;">${buchstaben[i]}</span>${o}
                 </div>
             `).join('');
+
+            // Timer zurücksetzen und starten
+            zeitLinks = 20;
+            document.getElementById('timer').innerText = zeitLinks;
+            clearInterval(countdown);
+            countdown = setInterval(() => {
+                zeitLinks--;
+                document.getElementById('timer').innerText = zeitLinks;
+                if(zeitLinks <= 0) {
+                    clearInterval(countdown);
+                    // Erzwinge Auswertung im Backend, falls die Zeit abläuft
+                    socket.emit('sende_antwort', -1); 
+                }
+            }, 1000);
         });
 
         socket.on('zeige_auswertung', (daten) => {
+            clearInterval(countdown);
             document.getElementById('spiel').style.display = 'none';
             document.getElementById('auswertung').style.display = 'block';
-            const farben = ["Rot (▲)", "Blau (◆)", "Gelb (●)", "Grün (■)"];
-            document.getElementById('ergebnis-text').innerText = `Richtige Antwort war: ${farben[daten.korrekt]}`;
-            document.getElementById('rangliste').innerHTML = daten.rangliste.slice(0, 5).map(s => `<li>${s.name}: <strong>${s.punkte} Pkt</strong></li>`).join('');
+            const buchstaben = ["A", "B", "C", "D"];
+            document.getElementById('ergebnis-text').innerText = `Richtige Antwort war: ${buchstaben[daten.korrekt]}`;
+            document.getElementById('rangliste').innerHTML = daten.rangliste.slice(0, 5).map((s, i) => `<li>#${i+1} ${s.name}: <strong>${s.punkte} Pkt</strong></li>`).join('');
         });
 
         socket.on('spiel_ende', (rangliste) => {
+            clearInterval(countdown);
             document.getElementById('spiel').style.display = 'none';
             document.getElementById('auswertung').style.display = 'block';
-            document.getElementById('ergebnis-text').innerText = "Spiel vorbei! 🏆";
+            document.getElementById('ergebnis-text').innerText = "FINALE! Wir haben einen Millionär! 🏆";
             document.getElementById('rangliste').innerHTML = rangliste.map((s, i) => `<li><strong>#${i+1} ${s.name}</strong>: ${s.punkte} Pkt</li>`).join('');
-            document.getElementById('auswertung').getElementsByTagName('button')[0].style.display = 'none';
+            document.getElementById('auswertung').getElementsByTagName('button').style.display = 'none';
         });
     </script>
 </body>
