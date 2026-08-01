@@ -1,22 +1,28 @@
 import os
+import time
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__, template_folder='templates', static_folder='templates')
-app.config['SECRET_KEY'] = 'quiz-ultra-secret-123!'
-# Wichtig für das Internet: Erlaube Verbindungen von allen Geräten
+app.config['SECRET_KEY'] = 'millionenshow-secret-99!'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Deine 5 Fragen
+# Deine 5 Millionen-Show-Fragen (Schwierigkeit steigt!)
+# a = Index der richtigen Antwort (0=Rot, 1=Blau, 2=Gelb, 3=Grün)
 fragen = [
-    {"q": "Welches Jahr haben wir aktuell?", "c": ["2024", "2025", "2026", "2027"], "a": 2},
-    {"q": "Welcher Planet ist der Sonne am nächsten?", "c": ["Venus", "Merkur", "Erde", "Mars"], "a": 1},
-    {"q": "Wie viele Bundesländer hat Österreich?", "c": ["7", "8", "9", "10"], "a": 2},
-    {"q": "Aus welcher Pflanze wird Tequila hergestellt?", "c": ["Kaktus", "Agave", "Zuckerrohr", "Weizen"], "a": 1},
-    {"q": "Welche Farbe hat die Kahoot-Schaltfläche unten rechts?", "c": ["Rot", "Blau", "Gelb", "Grün"], "a": 3}
+    {"q": "Für 100 €: Welches Tier bellt üblicherweise?", "c": ["Katze", "Maus", "Hund", "Vogel"], "a": 2},
+    {"q": "Für 500 €: Was ist das chemische Symbol für Wasser?", "c": ["CO2", "H2O", "NaCl", "O2"], "a": 1},
+    {"q": "Für 2.000 €: Welcher Planet wird auch der 'Rote Planet' genannt?", "c": ["Mars", "Venus", "Jupiter", "Saturn"], "a": 0},
+    {"q": "Für 10.000 €: Wie viele Tasten hat ein Standard-Klavier?", "c": ["66", "78", "88", "92"], "a": 2},
+    {"q": "Die 1.000.000 € Frage: Wer entwickelte die Relativitätstheorie?", "c": ["Isaac Newton", "Albert Einstein", "Nikola Tesla", "Marie Curie"], "a": 1}
 ]
 
-spiel_status = {"phase": "lobby", "frage_index": 0, "antworten_eingegangen": 0}
+spiel_status = {
+    "phase": "lobby", 
+    "frage_index": 0, 
+    "antworten_eingegangen": 0,
+    "frage_startzeit": 0  # Für die Zeiterfassung
+}
 spieler = {} 
 
 @app.route('/')
@@ -47,6 +53,8 @@ def handle_next():
         if spiel_status["frage_index"] < len(fragen):
             spiel_status["phase"] = "spiel"
             spiel_status["antworten_eingegangen"] = 0
+            spiel_status["frage_startzeit"] = time.time()  # Startzeit der Frage merken!
+            
             aktuelle = fragen[spiel_status["frage_index"]]
             emit('starte_frage', {"frage": aktuelle["q"], "optionen": aktuelle["c"]}, broadcast=True)
         else:
@@ -59,10 +67,19 @@ def handle_answer(index):
     from flask import request
     global spiel_status
     s = spieler.get(request.sid)
+    
     if s and spiel_status["phase"] == "spiel":
+        antwort_zeit = time.time()
+        vergangene_zeit = antwort_zeit - spiel_status["frage_startzeit"]
+        
         korrekt = fragen[spiel_status["frage_index"]]["a"]
         if index == korrekt:
-            s["punkte"] += 100
+            # Kahoot-Formel: Wer schneller drückt, kriegt mehr Punkte (Max 1000, Min 500)
+            # Zeitlimit im Frontend ist 20 Sekunden
+            zeit_faktor = max(0, (20 - vergangene_zeit) / 20)
+            punkte_fuer_runde = int(500 + (500 * zeit_faktor))
+            s["punkte"] += punkte_fuer_runde
+            
         spiel_status["antworten_eingegangen"] += 1
         
         if spiel_status["antworten_eingegangen"] >= len(spieler):
@@ -78,6 +95,5 @@ def handle_disconnect():
         emit('spieler_liste', [s["name"] for s in spieler.values()], broadcast=True)
 
 if __name__ == '__main__':
-    # Holt den Port, den Render uns im Internet zuweist
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
