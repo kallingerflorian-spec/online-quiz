@@ -6,13 +6,13 @@
     <title>Quiz Controller</title>
     <script src="https://cloudflare.com"></script>
     <style>
-        body { font-family: 'Arial', sans-serif; text-align: center; background: #333; color: white; padding: 15px; margin: 0; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+        body { font-family: 'Arial', sans-serif; text-align: center; background: #020228; color: white; padding: 15px; margin: 0; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 70vh; width: 100%; }
         .btn { font-size: 40px; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
         .btn-0 { background: #e21b3c; } .btn-1 { background: #1368ce; }
         .btn-2 { background: #d89e00; } .btn-3 { background: #26890c; }
-        input { font-size: 22px; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; width: 80%; max-width: 300px; text-align: center; }
-        button.join { font-size: 22px; padding: 12px 30px; background: #46178f; color: white; border: none; border-radius: 8px; font-weight: bold; }
+        input { font-size: 22px; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 2px solid #00d2ff; width: 80%; max-width: 300px; text-align: center; background: #050530; color: white; }
+        button.join { font-size: 22px; padding: 12px 30px; background: #00d2ff; color: #020228; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -23,7 +23,7 @@
     </div>
 
     <div id="warten" style="display:none;">
-        <h2 id="warte-text">Du bist drin!<br><br>Schau auf den Beamer... 📺</h2>
+        <h2 id="warte-text">Du bist im Studio! 🎉<br><br>Schau auf den großen Bildschirm... 📺</h2>
     </div>
 
     <div id="pad" class="grid" style="display:none;">
@@ -34,7 +34,10 @@
     </div>
 
     <script>
-        const socket = io();
+        // WICHTIG: Verbindet sich jetzt automatisch passend (Secure WebSocket über HTTPS)
+        const socket = io(window.location.origin, {
+            transports: ['websocket', 'polling']
+        });
         
         function join() {
             const name = document.getElementById('username').value.trim();
@@ -53,7 +56,7 @@
         function antworten(index) {
             socket.emit('sende_antwort', index);
             document.getElementById('pad').style.display = 'none';
-            document.getElementById('warte-text').innerHTML = "Antwort registriert! ⏱️<br><br>Warte auf die anderen...";
+            document.getElementById('warte-text').innerHTML = "Antwort eingeloggt! ⏱️<br><br>Warte auf die Auswertung...";
             document.getElementById('warten').style.display = 'block';
         }
 
