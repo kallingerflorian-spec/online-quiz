@@ -96,7 +96,8 @@ Noch keine Punkte.
 <script>
 
 const socket = io();
-
+socket.emit("host_connected");
+    
 socket.emit("host_request_players");
 
 // ----------------------------
