@@ -123,3 +123,32 @@ font-weight:bold;
 text-align:center;
 
 }
+
+
+/* ---------- QR-Code ---------- */
+
+.qr-box{
+    margin-top:40px;
+    text-align:center;
+}
+
+.qr-box img{
+    width:260px;
+    max-width:100%;
+    background:white;
+    padding:12px;
+    border-radius:15px;
+    box-shadow:0 8px 20px rgba(0,0,0,.25);
+}
+
+.qr-box p{
+    margin-top:15px;
+    color:#666;
+}
+
+.qr-box b{
+    display:block;
+    margin-top:8px;
+    color:#6D28D9;
+    word-break:break-all;
+}
