@@ -189,17 +189,19 @@ document.getElementById("submit").onclick=function(){
 
 // -----------------------------
 
-socket.on("leaderboard",function(data){
+socket.on("answer_result", function(data){
 
-    let html="<h2>🏆 Rangliste</h2>";
+    const result = document.getElementById("result");
 
-    data.forEach(function(player){
+    if(data.correct){
 
-        html+="<p>"+player.name+" : "+player.score+"</p>";
+        result.innerHTML = "<h2 style='color:green;'>✅ Richtig!</h2>";
 
-    });
+    }else{
 
-    document.getElementById("result").innerHTML=html;
+        result.innerHTML = "<h2 style='color:red;'>❌ Leider falsch!</h2>";
+
+    }
 
 });
 
