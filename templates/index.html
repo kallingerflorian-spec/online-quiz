@@ -28,9 +28,6 @@ id="name"
 type="text"
 placeholder="Dein Name">
 
-<input
-type="text"
-placeholder="Spielcode">
 
 <button id="join">
 Beitreten
@@ -74,7 +71,17 @@ Antwort senden
 <script>
 
 const socket = io();
+socket.on("connect", function () {
+    console.log("Verbunden:", socket.id);
+});
 
+socket.on("connect_error", function (err) {
+    console.error("Socket-Fehler:", err);
+});
+
+socket.on("join_error", function (data) {
+    alert(data.message);
+});
 let sortable;
 
 // -----------------------------
