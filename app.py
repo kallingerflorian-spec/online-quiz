@@ -14,34 +14,6 @@ QUESTION = {
     ]
 }
 
-@app.route("/")
-def index():
-    return render_template(
-        "index.html",
-        question=QUESTION["title"],
-        items=QUESTION["correct_order"]
-    )
-
-@app.route("/host")
-def host():
-    return render_template("host.html", game_url=GAME_URL)
-
-# ... weitere Routen ...
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
-# Beispiel-Reihenfolgefrage
-QUESTION = {
-    "title": "Bringe die Planeten in die richtige Reihenfolge von der Sonne aus:",
-    "correct_order": [
-        "Merkur",
-        "Venus",
-        "Erde",
-        "Mars"
-    ]
-}
-
 
 @app.route("/")
 def index():
@@ -54,7 +26,10 @@ def index():
 
 @app.route("/host")
 def host():
-    return render_template("host.html")
+    return render_template(
+        "host.html",
+        game_url=GAME_URL
+    )
 
 
 @app.route("/check", methods=["POST"])
@@ -84,4 +59,4 @@ def question():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
