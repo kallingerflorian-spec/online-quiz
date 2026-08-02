@@ -23,10 +23,10 @@ GAME_URL = "https://online-quiz-xe6u.onrender.com"
 QUESTION = {
     "title": "Ordne die Torfarben den Untersuchungen/Aktivitäten richtig zu: MRT (klaustro), MRT, Klimaanlage kühlen und Mammographie?:",
     "correct_order": [
-        "Blau",
-        "Rot",
-        "Weiß",
-        "Gelb"
+        "🟦 Blau",
+        "🟥 Rot",
+        "⬜ Weiß",
+        "🟨 Gelb"
     ]
 }
 
