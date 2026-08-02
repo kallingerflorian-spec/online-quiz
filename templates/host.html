@@ -1,245 +1,26 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Quiz Master - Beamer</title>
-    
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta charset="UTF-8">
+<title>Host</title>
 
-    <style>
-        body{
-            font-family:Arial,sans-serif;
-            text-align:center;
-            background:#f4f4f9;
-            margin:0;
-            padding:20px;
-            color:#333;
-        }
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-        .box{
-            background:white;
-            padding:40px;
-            border-radius:18px;
-            box-shadow:0 5px 20px rgba(0,0,0,.12);
-            display:inline-block;
-            min-width:550px;
-            margin-top:20px;
-        }
-
-        button{
-            font-size:22px;
-            padding:12px 30px;
-            cursor:pointer;
-            background:#46178f;
-            color:white;
-            border:none;
-            border-radius:10px;
-            font-weight:bold;
-        }
-
-        #qrcode{
-            margin:25px auto;
-            background:white;
-            padding:20px;
-            border-radius:20px;
-            width:fit-content;
-            box-shadow:0 3px 12px rgba(0,0,0,.15);
-        }
-
-        #qrcode img,
-        #qrcode canvas{
-            display:block;
-            width:320px !important;
-            height:320px !important;
-        }
-
-        .grid{
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:15px;
-            margin-top:30px;
-        }
-
-        .opt{
-            padding:20px;
-            font-size:24px;
-            color:white;
-            border-radius:8px;
-            text-align:left;
-            font-weight:bold;
-        }
-
-        .opt-0{background:#e21b3c;}
-        .opt-1{background:#1368ce;}
-        .opt-2{background:#d89e00;}
-        .opt-3{background:#26890c;}
-
-        ol{
-            text-align:left;
-            font-size:22px;
-            max-width:350px;
-            margin:20px auto;
-        }
-
-        li{
-            padding:6px 0;
-        }
-
-        #url-text{
-            font-size:22px;
-            font-weight:bold;
-            color:#46178f;
-        }
-    </style>
 </head>
 
 <body>
 
-<h1>Python Kahoot 🐍</h1>
+<div class="container">
 
-<div id="lobby" class="box">
+<h1>🎮 Host</h1>
 
-    <h2>QR-Code scannen zum Mitspielen</h2>
+<p>Spiel läuft.</p>
 
-    <div id="qrcode"></div>
-
-    <p id="url-text"></p>
-
-    <h3>Mitspieler (<span id="anzahl">0</span>)</h3>
-
-    <div id="spieler"
-         style="font-size:20px;font-weight:bold;color:#46178f;">
-        Noch niemand da...
-    </div>
-
-    <br><br>
-
-    <button onclick="start()">
-        Spiel starten
-    </button>
+<a class="button" href="/">
+Spieleransicht öffnen
+</a>
 
 </div>
-
-<div id="spiel" class="box" style="display:none;">
-
-    <h2 id="frage-text" style="font-size:32px;">
-        Frage lädt...
-    </h2>
-
-    <div id="optionen" class="grid"></div>
-
-</div>
-
-<div id="auswertung" class="box" style="display:none;">
-
-    <h2 id="ergebnis-text"></h2>
-
-    <h3>Bestenliste</h3>
-
-    <ol id="rangliste"></ol>
-
-    <br>
-
-    <button onclick="start()">
-        Nächste Frage
-    </button>
-
-</div>
-
-<script>
-// 1. Verbindung für Render optimieren (erzwingt Polling-Fallback, falls WebSockets blockiert werden)
-const socket = io(window.location.origin, {
-    transports: ['polling', 'websocket'],
-    upgrade: true,
-    secure: true
-});
-
-// 2. WICHTIG: "beamer_bereit" erst senden, wenn die Verbindung STEHT!
-socket.on("connect", () => {
-    console.log("Verbunden mit dem Server!");
-    socket.emit("beamer_bereit");
-});
-
-const quizURL = "https://online-quiz-xe6u.onrender.com";
-document.getElementById("url-text").innerText = quizURL;
-
-// QR-Code Generierung
-document.getElementById("qrcode").innerHTML = "";
-new QRCode(document.getElementById("qrcode"), {
-    text: quizURL,
-    width: 320,
-    height: 320,
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
-});
-
-// Spieler-Liste aktualisieren
-socket.on("spieler_liste", (liste) => {
-    document.getElementById("anzahl").innerText = liste.length;
-    document.getElementById("spieler").innerText = liste.join(", ") || "Noch niemand da...";
-});
-
-// Funktion für den Button-Klick (Spiel starten / Nächste Frage)
-function start() {
-    socket.emit("naechste_frage");
-}
-
-// Frage auf dem Beamer anzeigen
-socket.on("starte_frage", (daten) => {
-    document.getElementById("lobby").style.display = "none";
-    document.getElementById("auswertung").style.display = "none";
-    document.getElementById("spiel").style.display = "block";
-
-    document.getElementById("frage-text").innerText = daten.frage;
-
-    document.getElementById("optionen").innerHTML =
-        daten.optionen.map((o, i) => `
-        <div class="opt opt-${i}">
-        ${i == 0 ? "▲" : i == 1 ? "◆" : i == 2 ? "●" : "■"} ${o}
-        </div>
-        `).join("");
-});
-
-// Auswertung nach einer Frage anzeigen
-socket.on("zeige_auswertung", (daten) => {
-    document.getElementById("spiel").style.display = "none";
-    document.getElementById("auswertung").style.display = "block";
-
-    const farben = [
-        "Rot (▲)",
-        "Blau (◆)",
-        "Gelb (●)",
-        "Grün (■)"
-    ];
-
-    document.getElementById("ergebnis-text").innerText = "Richtige Antwort war: " + farben[daten.korrekt];
-
-    document.getElementById("rangliste").innerHTML =
-        daten.rangliste
-        .slice(0, 5)
-        .map(s => `<li>${s.name}: <strong>${s.punkte} Pkt</strong></li>`)
-        .join("");
-});
-
-// Spiel-Ende anzeigen
-socket.on("spiel_ende", (rangliste) => {
-    document.getElementById("spiel").style.display = "none";
-    document.getElementById("auswertung").style.display = "block";
-
-    document.getElementById("ergebnis-text").innerText = "Spiel vorbei! 🏆";
-
-    document.getElementById("rangliste").innerHTML =
-        rangliste.map((s, i) =>
-        `<li><strong>#${i + 1} ${s.name}</strong>: ${s.punkte} Pkt</li>`
-        ).join("");
-
-    // Button verstecken, da das Spiel vorbei ist
-    const btn = document.querySelector("#auswertung button");
-    if (btn) btn.style.display = "none";
-});
-</script>
 
 </body>
 </html>
