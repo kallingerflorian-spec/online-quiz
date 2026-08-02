@@ -5,7 +5,8 @@ from flask_socketio import SocketIO, emit
 
 app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = 'quiz-ultra-secret-123!'
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Wichtig für Render & Python 3.14: async_mode explizit auf 'gevent' setzen
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
 
 fragen = [
     {
