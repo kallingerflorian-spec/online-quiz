@@ -191,7 +191,12 @@ def submit_order(data):
     answers[player] = True
 
     correct = data["order"] == QUESTION["correct_order"]
-
+    emit(
+        "answer_result",
+        {
+            "correct": correct
+        }
+    )
     if correct:
         scores[player] += game["timer"] * 100
 
