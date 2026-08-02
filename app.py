@@ -21,12 +21,12 @@ socketio = SocketIO(
 GAME_URL = "https://online-quiz-xe6u.onrender.com"
 
 QUESTION = {
-    "title": "Bringe die Planeten in die richtige Reihenfolge von der Sonne aus:",
+    "title": "Ordne die Torfarben den Untersuchungen/Aktivitäten richtig zu: MRT (klaustro), MRT, Klimaanlage kühlen und Mammographie?:",
     "correct_order": [
-        "Merkur",
-        "Venus",
-        "Erde",
-        "Mars"
+        "Blau",
+        "Rot",
+        "Weiß",
+        "Gelb"
     ]
 }
 
