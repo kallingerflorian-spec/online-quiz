@@ -13,13 +13,19 @@
 <div class="container">
 
 <h1>🎮 Host</h1>
-<h2>Spiel beitreten</h2>
+<div class="qr-box">
 
-<img
-    src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ game_url }}"
-    alt="QR Code">
+    <h2>📱 QR-Code scannen</h2>
 
-<p>{{ game_url }}</p>
+    <img
+        src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ game_url }}"
+        alt="QR">
+
+    <p>oder besuche</p>
+
+    <b>{{ game_url }}</b>
+
+</div>
 
   
 <p>Spiel läuft.</p>
