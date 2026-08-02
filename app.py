@@ -1,115 +1,27 @@
-import os
-import time
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask import Flask, render_template, request, redirect, url_for
 
-app = Flask(__name__, template_folder='templates', static_folder='templates')
-app.config['SECRET_KEY'] = 'millionenshow-secret-99!'
+app = Flask(__name__)
 
-# async_mode=None nutzt den eingebauten Standard-Server, der mit Python 3.14 kompatibel ist
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode=None)
-
-# Deine Fragen (Hier kannst du jederzeit neue hinzufügen)
-fragen = [
-    {"type": "normal", "q": "Für 100 €: Welches Tier bellt üblicherweise?", "c": ["Katze", "Maus", "Hund", "Vogel"], "a": 2},
-    {"type": "normal", "q": "Für 500 €: Was ist das chemische Symbol für Wasser?", "c": ["CO2", "H2O", "NaCl", "O2"], "a": 1},
-    {"type": "reihenfolge", "q": "Bringe die Zahlen von KLEIN nach GROSS!", "c": ["50", "10", "100", "5"], "a":}
-]
-
-spiel_status = {
-    "phase": "lobby", 
-    "frage_index": 0, 
-    "antworten_eingegangen": 0,
-    "frage_startzeit": 0
+# Beispielfrage mit korrekter Reihenfolge
+QUESTION_DATA = {
+    "question": "Bringe diese Schritte in die richtige logische Reihenfolge:",
+    "correct_order": ["1. Planen", "2. Programmieren", "3. Testen", "4. Veröffentlichen"]
 }
-spieler = {} 
 
 @app.route('/')
-def index(): return render_template('index.html')
+def index():
+    # Gemischte Reihenfolge für den Benutzer
+    import random
+    shuffled = QUESTION_DATA["correct_order"][:]
+    random.shuffle(shuffled)
+    return render_template('index.html', question=QUESTION_DATA["question"], items=shuffled)
 
-@app.route('/host.html')
-def host(): return render_template('host.html')
-
-@socketio.on('beamer_bereit')
-def beamer_bereit():
-    emit('spieler_liste', [s["name"] for s in spieler.values()])
-
-@socketio.on('join')
-def handle_join(name):
-    from flask import request
-    spieler[request.sid] = {"name": name, "punkte": 0, "aktuelle_eingabe": []}
-    emit('spieler_liste', [s["name"] for s in spieler.values()], broadcast=True)
-
-@socketio.on('naechste_frage')
-def handle_next():
-    global spiel_status
-    if spiel_status["phase"] in ["lobby", "auswertung"]:
-        if spiel_status["phase"] == "auswertung":
-            spiel_status["frage_index"] += 1
-            
-        if spiel_status["frage_index"] < len(fragen):
-            spiel_status["phase"] = "spiel"
-            spiel_status["antworten_eingegangen"] = 0
-            spiel_status["frage_startzeit"] = time.time()
-            
-            for s in spieler.values():
-                s["aktuelle_eingabe"] = []
-            
-            aktuelle = fragen[spiel_status["frage_index"]]
-            emit('starte_frage', {"frage": aktuelle["q"], "optionen": aktuelle["c"], "type": aktuelle["type"]}, broadcast=True)
-        else:
-            spiel_status["phase"] = "ende"
-            rangliste = sorted(spieler.values(), key=lambda x: x["punkte"], reverse=True)
-            emit('spiel_ende', rangliste, broadcast=True)
-
-@socketio.on('sende_antwort')
-def handle_answer(index):
-    from flask import request
-    global spiel_status
-    s = spieler.get(request.sid)
-    
-    if s and spiel_status["phase"] == "spiel":
-        aktuelle_frage = fragen[spiel_status["frage_index"]]
-        antwort_zeit = time.time()
-        vergangene_zeit = antwort_zeit - spiel_status["frage_startzeit"]
-        
-        if aktuelle_frage["type"] == "normal":
-            if index == aktuelle_frage["a"]:
-                zeit_faktor = max(0, (20 - vergangene_zeit) / 20)
-                s["punkte"] += int(500 + (500 * zeit_faktor))
-            spiel_status["antworten_eingegangen"] += 1
-            
-        elif aktuelle_frage["type"] == "reihenfolge":
-            if index not in s["aktuelle_eingabe"]:
-                s["aktuelle_eingabe"].append(index)
-            
-            if len(s["aktuelle_eingabe"]) == 4:
-                if s["aktuelle_eingabe"] == aktuelle_frage["a"]:
-                    zeit_faktor = max(0, (20 - vergangene_zeit) / 20)
-                    s["punkte"] += int(500 + (500 * zeit_faktor))
-                spiel_status["antworten_eingegangen"] += 1
-                emit('reihenfolge_fertig', room=request.sid)
-
-        if spiel_status["antworten_eingegangen"] >= len(spieler):
-            spiel_status["phase"] = "auswertung"
-            rangliste = sorted(spieler.values(), key=lambda x: x["punkte"], reverse=True)
-            
-            if aktuelle_frage["type"] == "reihenfolge":
-                farben = ["Rot", "Blau", "Gelb", "Grün"]
-                loesung_text = " -> ".join([farben[i] for i in aktuelle_frage["a"]])
-            else:
-                farben = ["Rot (▲)", "Blau (◆)", "Gelb (●)", "Grün (■)"]
-                loesung_text = farben[aktuelle_frage["a"]]
-                
-            emit('zeige_auswertung', {"korrekt_text": loesung_text, "rangliste": rangliste}, broadcast=True)
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    from flask import request
-    if request.sid in spieler:
-        del spieler[request.sid]
-        emit('spieler_liste', [s["name"] for s in spieler.values()], broadcast=True)
+@app.route('/submit', methods=['POST'])
+def submit():
+    user_answer = request.form.getlist('order[]')
+    is_correct = (user_answer == QUESTION_DATA["correct_order"])
+    result_text = "Richtig! Perfekte Reihung." if is_correct else "Leider falsch. Versuch es noch einmal."
+    return render_template('result.html', result=result_text, correct=QUESTION_DATA["correct_order"])
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=5000)
