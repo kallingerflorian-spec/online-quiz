@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Kahoot Spieler</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; }
+        .btn { width: 45%; height: 150px; margin: 2%; font-size: 24px; border: none; color: white; cursor: pointer; }
+        .red { background: #e21b3c; } .blue { background: #1368ce; }
+    </style>
+</head>
+<body>
+    <h1>Dein Name: <input type="text" id="username" value="Spieler1"></h1>
+    <div id="game-zone">
+        <h3>Warte auf Frage...</h3>
+        <button class="btn red" onclick="sendAnswer(true)">Rot (Richtig)</button>
+        <button class="btn blue" onclick="sendAnswer(false)">Blau (Falsch)</button>
+    </div>
+
+    <script>
+        // Automatische WebSocket-URL (funktioniert lokal und auf Render)
+        const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const ws = new WebSocket(protocol + window.location.host + "/ws/player");
+
+        function sendAnswer(isCorrect) {
+            const name = document.getElementById("username").value;
+            ws.send(JSON.stringify({
+                type: "answer",
+                player: name,
+                correct: isCorrect
+            }));
+            alert("Antwort gesendet!");
+        }
+    </script>
+</body>
+</html>

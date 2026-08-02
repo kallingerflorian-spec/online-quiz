@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Kahoot Host</title>
+    <style>body { font-family: Arial, sans-serif; padding: 20px; }</style>
+</head>
+<body>
+    <h1>Kahoot Host-Bildschirm</h1>
+    <button onclick="nextQuestion()" style="font-size:20px; padding:10px;">Nächste Frage starten</button>
+    
+    <h2>Rangliste:</h2>
+    <div id="scoreboard">Noch keine Punkte.</div>
+
+    <script>
+        const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const ws = new WebSocket(protocol + window.location.host + "/ws/host");
+
+        ws.onmessage = function(event) {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "scores") {
+                let html = "<ul>";
+                for (const [player, score] of Object.entries(msg.data)) {
+                    html += `<li><strong>${player}</strong>: ${score} Punkte</li>`;
+                }
+                html += "</ul>";
+                document.getElementById("scoreboard").innerHTML = html;
+            }
+        };
+
+        function nextQuestion() {
+            ws.send(JSON.stringify({
+                type: "next_question",
+                question: "Wie viel ist 2 + 2?"
+            }));
+        }
+    </script>
+</body>
+</html>
