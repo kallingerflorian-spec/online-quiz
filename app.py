@@ -112,19 +112,13 @@ def host():
 # Socket Events
 # ---------------------------------
 
+
 @socketio.on("join")
 def join(data):
 
     name = data.get("name", "").strip()
-    pin = data.get("pin", "").strip()
 
-    if pin != game["pin"]:
-        emit("join_error", {
-            "message": "Falscher Spielcode."
-        })
-        return
-
-    if name == "":
+    if not name:
         emit("join_error", {
             "message": "Bitte Namen eingeben."
         })
@@ -135,17 +129,16 @@ def join(data):
     scores.setdefault(name, 0)
     answers[name] = False
 
-    join_room(game["pin"])
-
-    emit("joined", {
-        "pin": game["pin"]
-    })
+    emit("joined")
 
     socketio.emit(
         "player_list",
-        list(players.values()),
-        room=game["pin"]
+        list(players.values())
     )
+
+
+
+
 @socketio.on("host_request_players")
 def host_request_players():
 
@@ -201,7 +194,6 @@ def submit_order(data):
             "player": player,
             "correct": correct
         },
-        room=game["pin"]
     )
 
 
@@ -245,7 +237,6 @@ def disconnect():
     socketio.emit(
         "player_list",
         list(players.values()),
-        room=game["pin"]
     )
 
 
