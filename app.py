@@ -1,13 +1,13 @@
 import os
 import time
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
-# static_folder wird explizit definiert, um lokale Bilder sauber auszuliefern
+# static_folder wird explizit definiert, damit das lokale Bild sauber geladen wird
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = 'quiz-ultra-secret-123!'
 
-# Standard-Threading-Modus aktivieren - blockiert nicht mehr und lädt sofort
+# Wichtig für Render: Erlaube alle Verbindungen
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 fragen = [
@@ -45,8 +45,7 @@ fragen = [
             "Du rufst im MR an, ob ein Ladegerät fehlt"
         ],
         "a": 3,
-        # Greift lokal auf den static-Ordner zu!
-        "bild_pfad": "/static/lws_fremdkoerper.jpg" 
+        "bild_pfad": "/static/lws_fremdkoerper.jpg" # Greift lokal auf den static-Ordner zu
     }
 ]
 
