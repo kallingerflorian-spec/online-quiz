@@ -1,16 +1,42 @@
 import os
+import time
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 app = FastAPI()
 
-# Speicher für aktive Websocket-Verbindungen und Punktestände
+# Die 3 festen Fragen
+QUESTIONS = [
+    {
+        "id": 1,
+        "type": "sort", # Reihenfolgeaufgabe (Millionenshow)
+        "question": "Ordne diese Berge nach ihrer Höhe (Niedrigst nach Höchst):",
+        "options": {"A": "Großglockner", "B": "Mont Blanc", "C": "Zugspitze", "D": "Mount Everest"},
+        "correct": "CABD" # Zugspitze (2962m), Großglockner (3798m), Mont Blanc (4807m), Mount Everest (8848m)
+    },
+    {
+        "id": 2,
+        "type": "choice",
+        "question": "Welche Farbe hat eine reife Banane?",
+        "options": {"A": "Blau", "B": "Gelb", "C": "Rot", "D": "Grün"},
+        "correct": "B"
+    },
+    {
+        "id": 3,
+        "type": "choice",
+        "question": "In welchem Jahr befinden wir sich jetzt?",
+        "options": {"A": "2020", "B": "2024", "C": "2026", "D": "2030"},
+        "correct": "C"
+    }
+]
+
 class GameManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
-        self.scores: dict[str, int] = {}
+        self.scores: dict[str, float] = {} # Name: Punkte
+        self.current_question_idx = -1
+        self.question_start_time = 0.0
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -21,11 +47,13 @@ class GameManager:
 
     async def broadcast(self, message: dict):
         for connection in self.active_connections:
-            await connection.send_json(message)
+            try:
+                await connection.send_json(message)
+            except:
+                pass
 
 manager = GameManager()
 
-# HTML-Hilfsfunktion zum Laden der Frontends
 def get_html(file_name: str) -> str:
     return Path(f"templates/{file_name}").read_text()
 
@@ -44,19 +72,35 @@ async def websocket_endpoint(websocket: WebSocket, client_type: str):
         while True:
             data = await websocket.receive_json()
             
-            # Wenn ein Spieler antwortet
             if data.get("type") == "answer":
-                player = data.get("player")
-                is_correct = data.get("correct")
-                if is_correct:
-                    manager.scores[player] = manager.scores.get(player, 0) + 100
+                now = time.time()
+                elapsed = now - manager.question_start_time # Zeit in Sekunden
                 
-                # Punktestand an alle (besonders den Host) senden
+                player = data.get("player")
+                answer = data.get("answer")
+                
+                current_q = QUESTIONS[manager.current_question_idx]
+                is_correct = answer == current_q["correct"]
+                
+                if is_correct:
+                    if current_q["type"] == "sort":
+                        # Je schneller, desto mehr Bonuspunkte (Max 1000, Abzug pro Sekunde)
+                        bonus = max(0, int((20 - elapsed) * 50)) 
+                        points = 500 + bonus
+                    else:
+                        points = 1000
+                    manager.scores[player] = manager.scores.get(player, 0) + points
+                
                 await manager.broadcast({"type": "scores", "data": manager.scores})
                 
-            # Wenn der Host eine neue Frage sendet
             elif data.get("type") == "next_question":
-                await manager.broadcast({"type": "question", "data": data.get("question")})
-                
+                manager.current_question_idx += 1
+                if manager.current_question_idx < len(QUESTIONS):
+                    manager.question_start_time = time.time()
+                    q = QUESTIONS[manager.current_question_idx]
+                    await manager.broadcast({"type": "question", "data": q})
+                else:
+                    await manager.broadcast({"type": "game_over", "data": manager.scores})
+                    
     except WebSocketDisconnect:
         manager.disconnect(websocket)
