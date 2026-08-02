@@ -80,13 +80,17 @@ let sortable;
 
 // -----------------------------
 
-document.getElementById("join").onclick=function(){
+document.getElementById("join").onclick = function () {
 
-    const name=document.getElementById("name").value;
+    const name = document.getElementById("name").value;
+    const pin = document.getElementById("pin").value;
 
-    socket.emit("join",{
-        name:name
+    socket.emit("join", {
+        name: name,
+        pin: pin
     });
+
+};
 
 }
 
