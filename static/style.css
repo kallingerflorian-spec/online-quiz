@@ -1,0 +1,95 @@
+body{
+
+    margin:0;
+
+    font-family:Arial,Helvetica,sans-serif;
+
+    background:linear-gradient(135deg,#46178f,#7c3aed);
+
+    color:white;
+
+}
+
+.card{
+
+    width:700px;
+
+    margin:40px auto;
+
+    background:white;
+
+    color:#333;
+
+    border-radius:20px;
+
+    padding:40px;
+
+    text-align:center;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+
+}
+
+#qrcode{
+
+    margin:30px auto;
+
+    background:white;
+
+    padding:15px;
+
+    width:fit-content;
+
+    border-radius:15px;
+
+}
+
+.player{
+
+    background:#eee;
+
+    margin:8px;
+
+    padding:10px;
+
+    border-radius:10px;
+
+    font-size:20px;
+
+}
+
+button{
+
+    margin-top:30px;
+
+    font-size:22px;
+
+    background:#46178f;
+
+    color:white;
+
+    border:none;
+
+    padding:15px 35px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+button:hover{
+
+    transform:scale(1.05);
+
+}
+
+.url{
+
+    color:#666;
+
+    font-size:18px;
+
+}
