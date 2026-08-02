@@ -37,7 +37,7 @@ QUESTION = {
 players = {}
 
 scores = {}
-
+host_sid = None
 answers = {}
 
 game = {
@@ -147,6 +147,13 @@ def host_request_players():
         list(players.values())
     )
 
+
+@socketio.on("host_connected")
+def host_connected():
+
+    global host_sid
+
+    host_sid = request.sid
 
 
 @socketio.on("start_game")
