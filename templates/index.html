@@ -3,6 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - Smartphone</title>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col justify-center items-center p-4 select-none">
+
+    <div id="join-screen" class="w-full max-w-sm text-center">
+        <h1 class="text-4xl font-black mb-6 text-purple-400">Mitspielen</h1>
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
+            <input id="nickname" type="text" placeholder="Dein Name" class="w-full p-3 rounded-xl bg-gray-700 border border-gray-600 text-center text-xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4" maxlength="15">
+            <button onclick="joinen()" class="w-full bg-purple-600 hover:bg-purple-700 font-bold text-xl py-3 rounded-xl transition duration-200">Verbinden</button>
+        </div>
+    </div>
+
+    <div id="warten-screen" class="hidden text-center">
+        <div class="animate-pulse text-6xl mb-4">📡</div>
+        <h1 class="text-2xl font-bold mb-2">Eingeloggt!</h1>
+        <p class="text-gray-400">Schau auf das Haupt-Display...</p>
+    </div>
+
+    <div id="spieler-timer-container" class="hidden fixed top-0 left-0 w-full bg-gray-800 p-2 z-50">
+        <div class="w-full bg-gray-700 h-3 rounded-full overflow-hidden">
+            <div id="timer-balken-spieler" class="bg-red-500 h-full w-full transition-all linear duration-1000"></div>
+        </div>
+    </div>
+
+    <div id="mc-screen" class="hidden w-full max-w-xl flex flex-col pt-8">
+        <h2 id="spieler-mc-frage" class="text-lg font-bold mb-4 text-center px-2"></h2>
+        
+        <!-- Bild-Anzeige für Spieler-Handys (lokal geladen) -->
+        <div id="spieler-bild-bereich" class="hidden mb-4 flex justify-center">
+            <img id="spieler-frage-bild" src="" alt="Röntgen" class="rounded-lg max-h-44 object-contain border border-gray-700">
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 w-full">
+            <button onclick="antwortenMC(0)" class="bg-red-500 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">▲</span><span id="mc-text-0"></span></button>
+            <button onclick="antwortenMC(1)" class="bg-blue-500 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">◆</span><span id="mc-text-1"></span></button>
+            <button onclick="antwortenMC(2)" class="bg-yellow-500 text-gray-900 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">●</span><span id="mc-text-2"></span></button>
+            <button onclick="antwortenMC(3)" class="bg-green-500 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">■</span><span id="mc-text-3"></span></button>
+        </div>
+    </div>
+
+    <div id="puzzle-screen" class="hidden w-full max-w-md bg-gray-800 p-5 rounded-2xl shadow-2xl pt-8">
+        <h2 id="spieler-puzzle-frage" class="text-base font-bold mb-4 text-purple-400 text-center"></h2>
+        <div id="puzzle-liste" class="space-y-3 mb-5"></div>
+        <button onclick="antwortenPuzzle()" class="w-full bg-green-500 hover:bg-green-600 font-bold text-lg py-3 rounded-xl transition shadow-md">Zuordnung abschicken</button>
+    </div>
+
+    <div id="blockiert-screen" class="hidden text-center">
+        <div class="text-5xl mb-4">🔒</div>
+        <h1 class="text-xl font-bold">Antwort registriert!</h1>
+        <p class="text-gray-400 mt-1">Warten auf die Kollegen...</p>
+    </div>
+
+    <script>
+        const socket = io();
+        let aktuellePuzzleItems = [];
+        let spielerTimer;
+
+        function joinen() {
+            const name = document.getElementById('nickname').value.trim();
+            if(name) {
+                socket.emit('join', name);
+                switchScreen('warten-screen');
+            }
+        }
+
+        socket.on('spiel_start', (payload) => {
+            clearInterval(spielerTimer);
+            document.getElementById('spieler-timer-container').classList.remove('hidden');
+            
+            let zeitLinks = payload.daten.zeit;
+            const balken = document.getElementById('timer-balken-spieler');
+            balken.style.width = '100%';
+            spielerTimer = setInterval(() => {
+                zeitLinks--;
+                balken.style.width = `${(zeitLinks / payload.daten.zeit) * 100}%`;
+                if(zeitLinks <= 0) { clearInterval(spielerTimer); }
+            }, 1000);
+
+            if (payload.typ === 'mc') {
+                switchScreen('mc-screen');
+                document.getElementById('spieler-mc-frage').innerText = payload.daten.frage;
+                
+                const imgArea = document.getElementById('spieler-bild-bereich');
+                const imgTag = document.getElementById('spieler-frage-bild');
+                if(payload.daten.bild_pfad) {
+                    imgTag.src = payload.daten.bild_pfad;
+                    imgArea.classList.remove('hidden');
+                } else {
+                    imgArea.classList.add('hidden');
+                }
+
+                for(let i=0; i<4; i++) {
+                    document.getElementById(`mc-text-${i}`).innerText = payload.daten.antworten[i];
+                }
+            } else if (payload.typ === 'puzzle') {
+                switchScreen('puzzle-screen');
+                document.getElementById('spieler-puzzle-frage').innerText = payload.daten.frage;
+                aktuellePuzzleItems = payload.daten.items;
+                const container = document.getElementById('puzzle-liste');
+                container.innerHTML = '';
+                
+                aktuellePuzzleItems.forEach((item, idx) => {
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-700 p-3 rounded-xl border border-gray-600">
+                            <span class="font-semibold text-xs truncate max-w-xs pr-1">${item}</span>
+                            <select id="sel-${idx}" class="bg-gray-900 text-white rounded p-1.5 text-xs">
+                                <option value="Rot">Rot</option>
+                                <option value="Weiß">Weiß</option>
+                                <option value="Blau">Blau</option>
+                                <option value="Gelb">Gelb</option>
+                            </select>
+                        </div>
+                    `;
+                });
+            }
+        });
+
+        function antwortenMC(index) {
+            socket.emit('antwort_abgeben', { antwort_index: index });
+            switchScreen('blockiert-screen');
+        }
+
+        function antwortenPuzzle() {
+            const loesung = [];
+            aktuellePuzzleItems.forEach((_, idx) => {
+                loesung.push(document.getElementById(`sel-${idx}`).value);
+            });
+            socket.emit('antwort_abgeben', { loesung: loesung });
+            switchScreen('blockiert-screen');
+        }
+
+        socket.on('zeige_auswertung', () => { 
+            clearInterval(spielerTimer);
+            document.getElementById('spieler-timer-container').classList.add('hidden');
+            switchScreen('warten-screen'); 
+        });
+        
+        socket.on('spiel_ende', () => { 
+            clearInterval(spielerTimer);
+            document.getElementById('spieler-timer-container').classList.add('hidden');
+            switchScreen('warten-screen'); 
+        });
+
+        function switchScreen(id) {
+            ['join-screen', 'warten-screen', 'mc-screen', 'puzzle-screen', 'blockiert-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz - Abgabe</title>
     <script src="https://jsdelivr.net"></script>
     <script src="https://cloudflare.com"></script>
