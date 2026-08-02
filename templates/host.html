@@ -1,54 +1,125 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
     <meta charset="UTF-8">
-
-    <title>Radiologie Quiz</title>
-
-    <link rel="stylesheet" href="/static/style.css">
-
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+    <title>Kahoot Host - Beamer Ansicht</title>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
 </head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center justify-center p-6">
 
-<body class="host">
-
-<div class="card">
-
-    <h1>🩻 Radiologie Quiz</h1>
-
-    <p>QR-Code scannen und mitspielen</p>
-
-    <div id="qrcode"></div>
-
-    <p class="url">
-        https://online-quiz-xe6u.onrender.com
-    </p>
-
-    <h2>
-
-        Spieler
-        (<span id="count">0</span>)
-
-    </h2>
-
-    <div id="players">
-
-        Noch keine Spieler...
-
+    <!-- LOBBY SCREEN -->
+    <div id="lobby" class="text-center w-full max-w-2xl">
+        <h1 class="text-5xl font-black mb-4 text-purple-400">Medizinisches Röntgen-Quiz</h1>
+        <p class="text-xl mb-8 text-gray-300">Scanne oder öffne die IP-Adresse auf dem Smartphone!</p>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Eingeloggte Mitarbeiter:</h2>
+            <ul id="spieler-liste" class="flex flex-wrap gap-3 justify-center text-lg font-semibold"></ul>
+        </div>
+        <button onclick="naechsteFrage()" class="mt-8 bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg transition duration-200">Quiz starten</button>
     </div>
 
-    <button id="startButton">
+    <!-- SPIEL SCREEN (FRAGE) -->
+    <div id="spiel" class="hidden w-full max-w-4xl text-center">
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl mb-6">
+            <span id="frage-nummer" class="text-purple-400 font-bold uppercase tracking-wider text-sm block mb-1"></span>
+            <h1 id="frage-text" class="text-3xl font-extrabold px-4"></h1>
+        </div>
 
-        ▶ Quiz starten
+        <!-- Optionaler Bildbereich für Frage 3 -->
+        <div id="bild-bereich" class="hidden mb-6 flex justify-center">
+            <div class="bg-gray-700 p-2 rounded-xl max-w-md shadow-lg border border-gray-600">
+                <!-- Ersetze das src-Attribut später durch dein generiertes Bild -->
+                <img id="frage-bild" src="https://placehold.co" alt="Röntgenbild" class="rounded-lg max-h-64 object-contain">
+            </div>
+        </div>
 
-    </button>
+        <!-- Dynamischer Antwort- / Puzzlebereich -->
+        <div id="antwort-matrix" class="grid grid-cols-2 gap-4 text-left text-xl font-bold"></div>
+        <p class="mt-6 text-gray-400 animate-pulse text-lg">Warten auf die Eingaben...</p>
+    </div>
 
-</div>
+    <!-- AUSWERTUNG SCREEN (RANGLISTE) -->
+    <div id="auswertung" class="hidden w-full max-w-2xl text-center">
+        <h1 class="text-3xl font-black mb-6 text-yellow-400">Auflösung:<br><span id="richtige-antwort-text" class="text-white text-2xl font-normal block mt-2"></span></h1>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Aktueller Stand:</h2>
+            <ol id="rangliste" class="text-left text-xl space-y-2 max-h-64 overflow-y-auto"></ol>
+        </div>
+        <button onclick="naechsteFrage()" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg transition duration-200">Nächste Runde</button>
+    </div>
 
-<script src="/static/host.js"></script>
+    <!-- ENDE SCREEN -->
+    <div id="ende" class="hidden text-center w-full max-w-md">
+        <h1 class="text-5xl font-black text-yellow-400 mb-6">🏆 Podest 🏆</h1>
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl border-4 border-yellow-500">
+            <ol id="podest" class="text-2xl font-bold space-y-4"></ol>
+        </div>
+    </div>
 
+    <script>
+        const socket = io();
+
+        socket.on('connect', () => { socket.emit('beamer_bereit'); });
+
+        socket.on('spieler_liste', (liste) => {
+            const ul = document.getElementById('spieler-liste');
+            ul.innerHTML = liste.map(n => `<li class="bg-purple-600 px-4 py-2 rounded-full shadow">${n}</li>`).join('');
+        });
+
+        socket.on('zeige_frage', (daten) => {
+            switchScreen('spiel');
+            document.getElementById('frage-nummer').innerText = `Aufgabe ${daten.nummer}`;
+            document.getElementById('frage-text').innerText = daten.frage;
+            
+            // Bild-Handling
+            const bildBereich = document.getElementById('bild-bereich');
+            if (daten.bild) {
+                bildBereich.classList.remove('hidden');
+                // Wenn du das Bild lokal hast, nutze: document.getElementById('frage-bild').src = "/" + daten.bild;
+            } else {
+                bildBereich.classList.add('hidden');
+            }
+
+            const matrix = document.getElementById('antwort-matrix');
+            matrix.innerHTML = '';
+
+            if (daten.typ === 'mc') {
+                const farbKlassen = ["bg-red-500", "bg-blue-500", "bg-yellow-500 text-gray-900", "bg-green-500"];
+                const symbole = ["▲", "◆", "●", "■"];
+                daten.antworten.forEach((ant, i) => {
+                    matrix.innerHTML += `<div class="p-4 rounded-xl ${farbKlassen[i]} flex items-center shadow-md"><span class="mr-4 text-2xl">${symbole[i]}</span> <span>${ant}</span></div>`;
+                });
+            } else if (daten.typ === 'puzzle') {
+                // Zeige die Zuordnungs-Paare als Übersicht
+                daten.items.forEach((item, i) => {
+                    matrix.innerHTML += `<div class="p-4 rounded-xl bg-gray-800 border border-purple-500 flex justify-between items-center shadow-md"><span>${item}</span> <span class="text-sm bg-purple-900 px-2 py-1 rounded text-purple-200">Tür-Zuordnung gesucht!</span></div>`;
+                });
+            }
+        });
+
+        socket.on('zeige_auswertung', (daten) => {
+            switchScreen('auswertung');
+            document.getElementById('richtige-antwort-text').innerText = daten.loesung;
+            const ol = document.getElementById('rangliste');
+            ol.innerHTML = daten.rangliste.map((s, idx) => `<li class="flex justify-between py-1 border-b border-gray-700"><span>${idx+1}. ${s.name}</span><span class="font-bold text-purple-400">${s.punkte} Pkt</span></li>`).join('');
+        });
+
+        socket.on('spiel_ende', (rangliste) => {
+            switchScreen('ende');
+            const ol = document.getElementById('podest');
+            ol.innerHTML = rangliste.slice(0,3).map((s, idx) => `
+                <li class="flex justify-between items-center p-3 rounded-lg ${idx===0?'bg-yellow-600 text-white':idx===1?'bg-gray-400 text-gray-900':'bg-amber-700 text-white'}">
+                    <span>${idx+1}. ${s.name}</span><span>${s.punkte} Pkt</span>
+                </li>`).join('');
+        });
+
+        function naechsteFrage() { socket.emit('naechste_frage'); }
+
+        function switchScreen(id) {
+            ['lobby', 'spiel', 'auswertung', 'ende'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
