@@ -10,6 +10,145 @@
 
     <!-- LOBBY SCREEN -->
     <div id="lobby" class="text-center w-full max-w-2xl">
+        <h1 class="text-5xl font-black mb-4 text-purple-400">Röntgen-Quiz</h1>
+        <p class="text-xl mb-8 text-gray-300">Öffne den Link auf deinem Smartphone!</p>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Eingeloggte Mitarbeiter:</h2>
+            <ul id="spieler-liste" class="flex flex-wrap gap-3 justify-center text-lg font-semibold"></ul>
+        </div>
+        <button onclick="naechsteFrage()" class="mt-8 bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg">Quiz starten</button>
+    </div>
+
+    <!-- SPIEL SCREEN (FRAGE) -->
+    <div id="spiel" class="hidden w-full max-w-4xl flex flex-col items-center">
+        <!-- COUNTDOWN BALKEN -->
+        <div class="w-full bg-gray-700 h-4 rounded-full mb-6 overflow-hidden max-w-3xl">
+            <div id="timer-balken-host" class="bg-red-500 h-full w-full transition-all linear duration-1000"></div>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl mb-6 w-full max-w-3xl text-center">
+            <span id="frage-nummer" class="text-purple-400 font-bold uppercase tracking-wider text-sm block mb-1"></span>
+            <h1 id="frage-text" class="text-2xl font-extrabold px-4"></h1>
+        </div>
+
+        <!-- Bildbereich für das lokale LWS-Röntgenbild -->
+        <div id="bild-bereich" class="hidden mb-6 w-full max-w-md flex justify-center">
+            <div class="bg-gray-800 p-2 rounded-xl shadow-xl border border-gray-700">
+                <img id="frage-bild" src="" alt="Röntgenbild" class="rounded-lg max-h-72 w-full object-contain mx-auto">
+            </div>
+        </div>
+
+        <div id="antwort-matrix" class="grid grid-cols-2 gap-4 text-left text-lg font-bold w-full max-w-3xl"></div>
+    </div>
+
+    <!-- AUSWERTUNG SCREEN -->
+    <div id="auswertung" class="hidden w-full max-w-2xl text-center">
+        <h1 class="text-2xl font-black mb-6 text-yellow-400">Auflösung:<br><span id="richtige-antwort-text" class="text-white text-xl font-normal block mt-2"></span></h1>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Aktueller Stand:</h2>
+            <ol id="rangliste" class="text-left text-lg space-y-2 max-h-64 overflow-y-auto"></ol>
+        </div>
+        <button onclick="naechsteFrage()" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg">Nächste Runde</button>
+    </div>
+
+    <!-- ENDE SCREEN -->
+    <div id="ende" class="hidden text-center w-full max-w-md">
+        <h1 class="text-5xl font-black text-yellow-400 mb-6">🏆 Podest 🏆</h1>
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl border-4 border-yellow-500">
+            <ol id="podest" class="text-2xl font-bold space-y-4"></ol>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let hostTimer;
+
+        socket.on('connect', () => { socket.emit('beamer_bereit'); });
+
+        socket.on('spieler_liste', (liste) => {
+            document.getElementById('spieler-liste').innerHTML = liste.map(n => `<li class="bg-purple-600 px-4 py-2 rounded-full shadow">${n}</li>`).join('');
+        });
+
+        socket.on('zeige_frage', (daten) => {
+            clearInterval(hostTimer);
+            switchScreen('spiel');
+            document.getElementById('frage-nummer').innerText = `Aufgabe ${daten.nummer}`;
+            document.getElementById('frage-text').innerText = daten.frage;
+            
+            const bildBereich = document.getElementById('bild-bereich');
+            const bildTag = document.getElementById('frage-bild');
+            if (daten.bild_pfad) { 
+                bildTag.src = daten.bild_pfad; // Lädt das lokale Bild aus /static/
+                bildBereich.classList.remove('hidden'); 
+            } else { 
+                bildBereich.classList.add('hidden'); 
+            }
+
+            const matrix = document.getElementById('antwort-matrix');
+            matrix.innerHTML = '';
+
+            if (daten.typ === 'mc') {
+                const farbKlassen = ["bg-red-500", "bg-blue-500", "bg-yellow-500 text-gray-900", "bg-green-500"];
+                const symbole = ["▲", "◆", "●", "■"];
+                daten.antworten.forEach((ant, i) => {
+                    matrix.innerHTML += `<div class="p-4 rounded-xl ${farbKlassen[i]} flex items-center shadow-md"><span class="mr-4 text-2xl">${symbole[i]}</span> <span>${ant}</span></div>`;
+                });
+            } else if (daten.typ === 'puzzle') {
+                daten.items.forEach((item) => {
+                    matrix.innerHTML += `<div class="p-4 rounded-xl bg-gray-800 border border-purple-500 flex justify-between items-center shadow-md w-full col-span-2"><span>${item}</span></div>`;
+                });
+            }
+
+            let zeitLinks = daten.zeit;
+            const balken = document.getElementById('timer-balken-host');
+            balken.style.width = '100%';
+            
+            hostTimer = setInterval(() => {
+                zeitLinks--;
+                balken.style.width = `${(zeitLinks / daten.zeit) * 100}%`;
+                if(zeitLinks <= 0) {
+                    clearInterval(hostTimer);
+                    socket.emit('zeit_abgelaufen');
+                }
+            }, 1000);
+        });
+
+        socket.on('zeige_auswertung', (daten) => {
+            clearInterval(hostTimer);
+            switchScreen('auswertung');
+            document.getElementById('richtige-antwort-text').innerText = daten.loesung;
+            document.getElementById('rangliste').innerHTML = daten.rangliste.map((s, idx) => `<li class="flex justify-between py-1 border-b border-gray-700"><span>${idx+1}. ${s.name}</span><span class="font-bold text-purple-400">${s.punkte} Pkt</span></li>`).join('');
+        });
+
+        socket.on('spiel_ende', (rangliste) => {
+            switchScreen('ende');
+            document.getElementById('podest').innerHTML = rangliste.slice(0,3).map((s, idx) => `
+                <li class="flex justify-between items-center p-3 rounded-lg ${idx===0?'bg-yellow-600 text-white':idx===1?'bg-gray-400 text-gray-900':'bg-amber-700 text-white'}">
+                    <span>${idx+1}. ${s.name}</span><span>${s.punkte} Pkt</span>
+                </li>`).join('');
+        });
+
+        function naechsteFrage() { socket.emit('naechste_frage'); }
+
+        function switchScreen(id) {
+            ['lobby', 'spiel', 'auswertung', 'ende'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Kahoot Host - Beamer Ansicht</title>
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://cloudflare.com"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center justify-center p-6">
+
+    <!-- LOBBY SCREEN -->
+    <div id="lobby" class="text-center w-full max-w-2xl">
         <h1 class="text-5xl font-black mb-4 text-purple-400">Medizinisches Röntgen-Quiz</h1>
         <p class="text-xl mb-8 text-gray-300">Scanne oder öffne die IP-Adresse auf dem Smartphone!</p>
         <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
