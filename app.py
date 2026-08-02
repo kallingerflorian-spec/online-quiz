@@ -195,13 +195,15 @@ def submit_order(data):
     if correct:
         scores[player] += game["timer"] * 100
 
-    socketio.emit(
-        "answer_update",
-        {
-            "player": player,
-            "correct": correct
-        },
-    )
+        if host_sid:
+            socketio.emit(
+                "answer_update",
+                {
+                    "player": player,
+                    "correct": correct
+                },
+                to=host_sid
+            )
 
 
 
@@ -221,11 +223,12 @@ def show_results():
         key=lambda x: x["score"],
         reverse=True
     )
-
-    socketio.emit(
-        "leaderboard",
-        ranking
-    )
+    if host_sid:
+        socketio.emit(
+            "leaderboard",
+            ranking,
+            to=host_sid
+        )
 
 
 
