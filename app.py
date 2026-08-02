@@ -1,3 +1,4 @@
+# MUSS ganz oben stehen, vor allen anderen Imports!
 from gevent import monkey
 monkey.patch_all()
 
@@ -8,7 +9,10 @@ from flask_socketio import SocketIO, emit
 
 app = Flask(__name__, template_folder='templates', static_folder='templates')
 app.config['SECRET_KEY'] = 'millionenshow-secret-99!'
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+# async_mode='gevent' zwingt SocketIO, sauber mit Ihrem Server zu arbeiten
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
+
 
 # Deine 5 Millionen-Show-Fragen (Schwierigkeit steigt!)
 # a = Index der richtigen Antwort (0=Rot, 1=Blau, 2=Gelb, 3=Grün)
