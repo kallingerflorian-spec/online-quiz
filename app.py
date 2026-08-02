@@ -112,12 +112,24 @@ def host():
 @socketio.on("join")
 def join(data):
 
-    name = data["name"]
+    name = data.get("name", "").strip()
+    pin = data.get("pin", "").strip()
+
+    if pin != game["pin"]:
+        emit("join_error", {
+            "message": "Falscher Spielcode."
+        })
+        return
+
+    if name == "":
+        emit("join_error", {
+            "message": "Bitte Namen eingeben."
+        })
+        return
 
     players[request.sid] = name
 
-    scores[name] = 0
-
+    scores.setdefault(name, 0)
     answers[name] = False
 
     join_room(game["pin"])
@@ -126,12 +138,11 @@ def join(data):
         "pin": game["pin"]
     })
 
-    emit(
+    socketio.emit(
         "player_list",
         list(players.values()),
         room=game["pin"]
     )
-
 @socketio.on("host_request_players")
 def host_request_players():
 
@@ -162,6 +173,37 @@ def start_game():
     socketio.start_background_task(countdown)
 
 
+
+@socketio.on("submit_order")
+def submit_order(data):
+
+    player = players.get(request.sid)
+
+    if player is None:
+        return
+
+    if answers[player]:
+        return
+
+    answers[player] = True
+
+    correct = data["order"] == QUESTION["correct_order"]
+
+    if correct:
+        scores[player] += game["timer"] * 100
+
+    socketio.emit(
+        "answer_update",
+        {
+            "player": player,
+            "correct": correct
+        },
+        room=game["pin"]
+    )
+
+
+
+
 def show_results():
 
     ranking = []
@@ -189,15 +231,27 @@ def show_results():
 @socketio.on("disconnect")
 def disconnect():
 
-    if request.sid in players:
+    if request.sid not in players:
+        return
 
-        name = players.pop(request.sid)
+    name = players.pop(request.sid)
 
-        if name in answers:
-            answers.pop(name)
+    answers.pop(name, None)
+    scores.pop(name, None)
 
-        emit(
-            "player_list",
-            list(players.values()),
-            room=game["pin"]
-        )
+    socketio.emit(
+        "player_list",
+        list(players.values()),
+        room=game["pin"]
+    )
+
+
+
+if __name__ == "__main__":
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=5000,
+        debug=True
+    )
+
