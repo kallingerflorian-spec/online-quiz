@@ -495,9 +495,10 @@ def beende_runde():
     }, broadcast=True)
 
 # KORRIGIERT FÜR DIE AKTUELLE VERSION: Importiert 'Middleware' statt 'WSGIMiddleware'
-from engineio.middleware import Middleware
-asgi_app = Middleware(socketio, app)
+# Ganz am Ende der Datei die Middleware komplett ohne fehleranfällige Imports erstellen:
+asgi_app = socketio.get_asgi_application(app)
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+
 
