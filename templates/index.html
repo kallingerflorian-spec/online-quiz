@@ -112,14 +112,15 @@ socket.on("joined",function(){
 });
 
 // -----------------------------
+socket.on("start_question", function(question){
 
-socket.on("start_question",function(question){
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("submit").disabled = false;
 
-    document.getElementById("waiting").style.display="none";
+    document.getElementById("waiting").style.display = "none";
+    document.getElementById("game").style.display = "block";
 
-    document.getElementById("game").style.display="block";
-
-    document.getElementById("question").innerHTML=question.title;
+    document.getElementById("question").innerHTML = question.title;
 
     const list=document.getElementById("list");
 
@@ -205,6 +206,19 @@ socket.on("answer_result", function(data){
 
 });
 
+socket.on("game_restarted", function(){
+
+    document.getElementById("game").style.display = "none";
+    document.getElementById("waiting").style.display = "none";
+    document.getElementById("login").style.display = "block";
+
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("name").value = "";
+    document.getElementById("submit").disabled = false;
+
+});
+
+    
 </script>
 
 </body>
