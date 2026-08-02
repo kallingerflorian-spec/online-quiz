@@ -3,65 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Controller</title>
+    <title>Quiz - Abgabe</title>
+    <script src="https://jsdelivr.net"></script>
     <script src="https://cloudflare.com"></script>
-    <style>
-        body { font-family: 'Arial', sans-serif; text-align: center; background: #333; color: white; padding: 15px; margin: 0; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 70vh; width: 100%; }
-        .btn { font-size: 40px; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
-        .btn-0 { background: #e21b3c; } .btn-1 { background: #1368ce; }
-        .btn-2 { background: #d89e00; } .btn-3 { background: #26890c; }
-        input { font-size: 22px; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: none; width: 80%; max-width: 300px; text-align: center; }
-        button.join { font-size: 22px; padding: 12px 30px; background: #46178f; color: white; border: none; border-radius: 8px; font-weight: bold; }
-    </style>
 </head>
-<body>
-    <div id="login">
-        <h2>Dein Quiz-Name:</h2>
-        <input type="text" id="username" placeholder="z.B. Max" maxlength="12"><br>
-        <button class="join" onclick="join()">Mitspielen 🚀</button>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col justify-center items-center p-4 select-none">
+
+    <!-- LOGIN -->
+    <div id="join-screen" class="w-full max-w-sm text-center">
+        <h1 class="text-4xl font-black mb-6 text-purple-400">Mitspielen</h1>
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
+            <input id="nickname" type="text" placeholder="Dein Name" class="w-full p-3 rounded-xl bg-gray-700 border border-gray-600 text-center text-xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4" maxlength="15">
+            <button onclick="joinen()" class="w-full bg-purple-600 hover:bg-purple-700 font-bold text-xl py-3 rounded-xl transition duration-200">Verbinden</button>
+        </div>
     </div>
 
-    <div id="warten" style="display:none;">
-        <h2 id="warte-text">Du bist drin!<br><br>Schau auf den Beamer... 📺</h2>
+    <!-- WARTEN -->
+    <div id="warten-screen" class="hidden text-center">
+        <div class="animate-pulse text-6xl mb-4">📡</div>
+        <h1 class="text-2xl font-bold mb-2">Erfolgreich eingeloggt!</h1>
+        <p class="text-gray-400">Blick auf den Beamer richten...</p>
     </div>
 
-    <div id="pad" class="grid" style="display:none;">
-        <button class="btn btn-0" onclick="antworten(0)">▲</button>
-        <button class="btn btn-1" onclick="antworten(1)">◆</button>
-        <button class="btn btn-2" onclick="antworten(2)">●</button>
-        <button class="btn btn-3" onclick="antworten(3)">■</button>
+    <!-- MULTIPLE CHOICE SWITCH -->
+    <div id="mc-screen" class="hidden w-full h-screen fixed inset-0 p-3 grid grid-cols-2 grid-rows-2 gap-3">
+        <button onclick="antwortenMC(0)" class="bg-red-500 rounded-2xl text-5xl shadow-lg">▲</button>
+        <button onclick="antwortenMC(1)" class="bg-blue-500 rounded-2xl text-5xl shadow-lg">◆</button>
+        <button onclick="antwortenMC(2)" class="bg-yellow-500 rounded-2xl text-5xl shadow-lg text-gray-900">●</button>
+        <button onclick="antwortenMC(3)" class="bg-green-500 rounded-2xl text-5xl shadow-lg">■</button>
+    </div>
+
+    <!-- PUZZLE / ZUORDNUNG SCREEN -->
+    <div id="puzzle-screen" class="hidden w-full max-w-md bg-gray-800 p-5 rounded-2xl shadow-2xl">
+        <h2 class="text-xl font-bold mb-4 text-purple-400 text-center">Ordne die Farben zu:</h2>
+        <div id="puzzle-liste" class="space-y-4 mb-6"></div>
+        <button onclick="antwortenPuzzle()" class="w-full bg-green-500 hover:bg-green-600 font-bold text-lg py-3 rounded-xl transition shadow-md">Zuordnung abschicken</button>
+    </div>
+
+    <!-- REGISTERED LOCK -->
+    <div id="blockiert-screen" class="hidden text-center">
+        <div class="text-5xl mb-4">verriegelt 🔒</div>
+        <h1 class="text-xl font-bold">Deine Antwort ist im Kasten!</h1>
+        <p class="text-gray-400 mt-1">Warten auf die restlichen Kollegen...</p>
     </div>
 
     <script>
         const socket = io();
-        
-        function join() {
-            const name = document.getElementById('username').value.trim();
+        let aktuellePuzzleItems = [];
+
+        function joinen() {
+            const name = document.getElementById('nickname').value.trim();
             if(name) {
                 socket.emit('join', name);
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('warten').style.display = 'block';
+                switchScreen('warten-screen');
             }
         }
 
-        socket.on('starte_frage', () => {
-            document.getElementById('warten').style.display = 'none';
-            document.getElementById('pad').style.display = 'grid';
+        socket.on('spiel_start', (payload) => {
+            if (payload.typ === 'mc') {
+                switchScreen('mc-screen');
+            } else if (payload.typ === 'puzzle') {
+                switchScreen('puzzle-screen');
+                aktuellePuzzleItems = payload.daten.items;
+                const container = document.getElementById('puzzle-liste');
+                container.innerHTML = '';
+                
+                aktuellePuzzleItems.forEach((item, idx) => {
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-700 p-3 rounded-xl border border-gray-600">
+                            <span class="font-semibold text-sm truncate max-w-xs">${item}</span>
+                            <select id="sel-${idx}" class="bg-gray-900 text-white rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
+                                <option value="Rot">Rot</option>
+                                <option value="Weiß">Weiß</option>
+                                <option value="Blau">Blau</option>
+                                <option value="Gelb">Gelb</option>
+                            </select>
+                        </div>
+                    `;
+                });
+            }
         });
 
-        function antworten(index) {
-            socket.emit('sende_antwort', index);
-            document.getElementById('pad').style.display = 'none';
-            document.getElementById('warte-text').innerHTML = "Antwort registriert! ⏱️<br><br>Warte auf die anderen...";
-            document.getElementById('warten').style.display = 'block';
+        function antwortenMC(index) {
+            socket.emit('antwort_abgeben', { antwort_index: index });
+            switchScreen('blockiert-screen');
         }
 
-        socket.on('zeige_auswertung', () => {
-            document.getElementById('pad').style.display = 'none';
-            document.getElementById('warte-text').innerHTML = "Runde vorbei!<br><br>Schau auf den Beamer! 📊";
-            document.getElementById('warten').style.display = 'block';
-        });
+        function antwortenPuzzle() {
+            const loesung = [];
+            aktuellePuzzleItems.forEach((_, idx) => {
+                const val = document.getElementById(`sel-${idx}`).value;
+                loesung.push(val);
+            });
+            socket.emit('antwort_abgeben', { loesung: loesung });
+            switchScreen('blockiert-screen');
+        }
+
+        socket.on('zeige_auswertung', () => { switchScreen('warten-screen'); });
+        socket.on('spiel_ende', () => { switchScreen('warten-screen'); });
+
+        function switchScreen(id) {
+            ['join-screen', 'warten-screen', 'mc-screen', 'puzzle-screen', 'blockiert-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
