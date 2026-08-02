@@ -2,25 +2,32 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Python Kahoot - Reihung</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background: #46178f; color: white; }
-        ul { list-style: none; padding: 0; }
-        li { background: white; color: black; margin: 10px auto; padding: 10px; width: 300px; cursor: pointer; border-radius: 5px; }
-    </style>
+    <title>Kahoot Reihenfolge</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 </head>
 <body>
+
+<div class="container">
+
     <h1>{{ question }}</h1>
-    <form action="/submit" method="POST">
-        <ul id="sortable">
-            {% for item in items %}
-                <li>
-                    <input type="hidden" name="order[]" value="{{ item }}">
-                    {{ item }}
-                </li>
-            {% endfor %}
-        </ul>
-        <button type="submit" style="padding: 10px 20px; font-size: 16px;">Antwort absenden</button>
-    </form>
+
+    <ul id="list">
+        {% for item in items %}
+        <li class="card">{{ item }}</li>
+        {% endfor %}
+    </ul>
+
+    <button onclick="checkOrder()">
+        Antwort prüfen
+    </button>
+
+    <div id="result"></div>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
 </html>
