@@ -9,8 +9,11 @@ from threading import Thread
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "quiz-secret"
 
-socketio = SocketIO(app, cors_allowed_origins="*")
-
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode="threading"
+)
 # ---------------------------------
 # Einstellungen
 # ---------------------------------
