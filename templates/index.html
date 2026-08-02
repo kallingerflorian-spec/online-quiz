@@ -29,7 +29,6 @@ type="text"
 placeholder="Dein Name">
 
 <input
-id="pin"
 type="text"
 placeholder="Spielcode">
 
@@ -82,17 +81,18 @@ let sortable;
 
 document.getElementById("join").onclick = function () {
 
-    const name = document.getElementById("name").value;
-    const pin = document.getElementById("pin").value;
+    const name = document.getElementById("name").value.trim();
+
+    if (name === "") {
+        alert("Bitte Namen eingeben.");
+        return;
+    }
 
     socket.emit("join", {
-        name: name,
-        pin: pin
+        name: name
     });
 
 };
-
-}
 
 // -----------------------------
 
