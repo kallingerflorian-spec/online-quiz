@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Radiologie Quiz</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+</head>
+
+<body class="player">
+
+<div id="joinCard" class="card">
+
+    <h1>🩻 Radiologie Quiz</h1>
+
+    <h2>Willkommen!</h2>
+
+    <p>Bitte gib deinen Namen ein.</p>
+
+    <input
+        id="name"
+        type="text"
+        placeholder="Vorname"
+        maxlength="20"
+    >
+
+    <br><br>
+
+    <button id="joinButton">
+
+        Mitspielen
+
+    </button>
+
+</div>
+
+
+<div id="quizCard" class="card" style="display:none;">
+
+    <div id="progress">
+
+        Frage
+
+    </div>
+
+    <h2 id="question">
+
+        Warten auf den Host...
+
+    </h2>
+
+    <div id="imageContainer"></div>
+
+    <div id="answers"></div>
+
+</div>
+
+
+<script src="/static/player.js"></script>
+
+</body>
+
+</html>

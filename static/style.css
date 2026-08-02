@@ -1,95 +1,77 @@
-body{
+.player{
 
-    margin:0;
-
-    font-family:Arial,Helvetica,sans-serif;
-
-    background:linear-gradient(135deg,#46178f,#7c3aed);
-
-    color:white;
+    background:#f3f5fb;
 
 }
 
-.card{
+input{
 
-    width:700px;
+    width:300px;
 
-    margin:40px auto;
-
-    background:white;
-
-    color:#333;
-
-    border-radius:20px;
-
-    padding:40px;
-
-    text-align:center;
-
-    box-shadow:0 10px 30px rgba(0,0,0,.2);
-
-}
-
-#qrcode{
-
-    margin:30px auto;
-
-    background:white;
+    font-size:22px;
 
     padding:15px;
 
-    width:fit-content;
-
-    border-radius:15px;
-
-}
-
-.player{
-
-    background:#eee;
-
-    margin:8px;
-
-    padding:10px;
-
     border-radius:10px;
 
-    font-size:20px;
+    border:2px solid #ddd;
 
 }
 
-button{
+.answer{
 
-    margin-top:30px;
+    width:100%;
+
+    margin:10px 0;
+
+    padding:20px;
 
     font-size:22px;
+
+    border:none;
+
+    border-radius:15px;
 
     background:#46178f;
 
     color:white;
 
-    border:none;
-
-    padding:15px 35px;
-
-    border-radius:10px;
-
     cursor:pointer;
 
-    transition:.2s;
+}
+
+.answer:hover{
+
+    background:#5c22b5;
 
 }
 
-button:hover{
+.answer:disabled{
 
-    transform:scale(1.05);
+    opacity:.5;
 
 }
 
-.url{
+.questionImage{
+
+    width:100%;
+
+    max-width:650px;
+
+    border-radius:15px;
+
+    margin:20px auto;
+
+    display:block;
+
+}
+
+#progress{
 
     color:#666;
 
     font-size:18px;
+
+    margin-bottom:20px;
 
 }
