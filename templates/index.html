@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Controller</title>
-    <script src="https://cloudflare.com"></script>
+    
+    <!-- KORREKTUR: Richtige Socket.io Bibliothek einbinden, genau wie in der host.html -->
+    <script src="https://socket.io"></script>
+    
     <style>
         body { font-family: 'Arial', sans-serif; text-align: center; background: #020228; color: white; padding: 15px; margin: 0; box-sizing: border-box; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; height: 70vh; width: 100%; }
@@ -34,9 +37,11 @@
     </div>
 
     <script>
-        // WICHTIG: Verbindet sich jetzt automatisch passend (Secure WebSocket über HTTPS)
+        // KORREKTUR: Verbindungsparameter für Render optimieren (Polling zuerst für stabile Verbindung)
         const socket = io(window.location.origin, {
-            transports: ['websocket', 'polling']
+            transports: ['polling', 'websocket'],
+            upgrade: true,
+            secure: true
         });
         
         function join() {
