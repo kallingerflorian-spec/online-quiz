@@ -148,100 +148,97 @@
 </div>
 
 <script>
+// 1. Verbindung für Render optimieren (erzwingt Polling-Fallback, falls WebSockets blockiert werden)
+const socket = io(window.location.origin, {
+    transports: ['polling', 'websocket'],
+    upgrade: true,
+    secure: true
+});
 
-const socket = io();
-
-socket.emit("beamer_bereit");
+// 2. WICHTIG: "beamer_bereit" erst senden, wenn die Verbindung STEHT!
+socket.on("connect", () => {
+    console.log("Verbunden mit dem Server!");
+    socket.emit("beamer_bereit");
+});
 
 const quizURL = "https://online-quiz-xe6u.onrender.com";
-    
 document.getElementById("url-text").innerText = quizURL;
 
+// QR-Code Generierung
 document.getElementById("qrcode").innerHTML = "";
-
-new QRCode(document.getElementById("qrcode"),{
-    text:quizURL,
-    width:320,
-    height:320,
-    colorDark:"#000000",
-    colorLight:"#ffffff",
-    correctLevel:QRCode.CorrectLevel.H
+new QRCode(document.getElementById("qrcode"), {
+    text: quizURL,
+    width: 320,
+    height: 320,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
 });
 
-socket.on("spieler_liste",(liste)=>{
-
-    document.getElementById("anzahl").innerText=liste.length;
-
-    document.getElementById("spieler").innerText=
-        liste.join(", ") || "Noch niemand da...";
-
+// Spieler-Liste aktualisieren
+socket.on("spieler_liste", (liste) => {
+    document.getElementById("anzahl").innerText = liste.length;
+    document.getElementById("spieler").innerText = liste.join(", ") || "Noch niemand da...";
 });
 
-function start(){
-
+// Funktion für den Button-Klick (Spiel starten / Nächste Frage)
+function start() {
     socket.emit("naechste_frage");
-
 }
 
-socket.on("starte_frage",(daten)=>{
+// Frage auf dem Beamer anzeigen
+socket.on("starte_frage", (daten) => {
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("auswertung").style.display = "none";
+    document.getElementById("spiel").style.display = "block";
 
-    document.getElementById("lobby").style.display="none";
-    document.getElementById("auswertung").style.display="none";
-    document.getElementById("spiel").style.display="block";
+    document.getElementById("frage-text").innerText = daten.frage;
 
-    document.getElementById("frage-text").innerText=daten.frage;
-
-    document.getElementById("optionen").innerHTML=
-        daten.optionen.map((o,i)=>`
+    document.getElementById("optionen").innerHTML =
+        daten.optionen.map((o, i) => `
         <div class="opt opt-${i}">
-        ${i==0?"▲":i==1?"◆":i==2?"●":"■"} ${o}
+        ${i == 0 ? "▲" : i == 1 ? "◆" : i == 2 ? "●" : "■"} ${o}
         </div>
         `).join("");
-
 });
 
-socket.on("zeige_auswertung",(daten)=>{
+// Auswertung nach einer Frage anzeigen
+socket.on("zeige_auswertung", (daten) => {
+    document.getElementById("spiel").style.display = "none";
+    document.getElementById("auswertung").style.display = "block";
 
-    document.getElementById("spiel").style.display="none";
-    document.getElementById("auswertung").style.display="block";
-
-    const farben=[
+    const farben = [
         "Rot (▲)",
         "Blau (◆)",
         "Gelb (●)",
         "Grün (■)"
     ];
 
-    document.getElementById("ergebnis-text").innerText=
-        "Richtige Antwort war: "+farben[daten.korrekt];
+    document.getElementById("ergebnis-text").innerText = "Richtige Antwort war: " + farben[daten.korrekt];
 
-    document.getElementById("rangliste").innerHTML=
+    document.getElementById("rangliste").innerHTML =
         daten.rangliste
-        .slice(0,5)
-        .map(s=>`<li>${s.name}: <strong>${s.punkte} Pkt</strong></li>`)
+        .slice(0, 5)
+        .map(s => `<li>${s.name}: <strong>${s.punkte} Pkt</strong></li>`)
         .join("");
-
 });
 
-socket.on("spiel_ende",(rangliste)=>{
+// Spiel-Ende anzeigen
+socket.on("spiel_ende", (rangliste) => {
+    document.getElementById("spiel").style.display = "none";
+    document.getElementById("auswertung").style.display = "block";
 
-    document.getElementById("spiel").style.display="none";
-    document.getElementById("auswertung").style.display="block";
+    document.getElementById("ergebnis-text").innerText = "Spiel vorbei! 🏆";
 
-    document.getElementById("ergebnis-text").innerText=
-        "Spiel vorbei! 🏆";
-
-    document.getElementById("rangliste").innerHTML=
-        rangliste.map((s,i)=>
-        `<li><strong>#${i+1} ${s.name}</strong>: ${s.punkte} Pkt</li>`
+    document.getElementById("rangliste").innerHTML =
+        rangliste.map((s, i) =>
+        `<li><strong>#${i + 1} ${s.name}</strong>: ${s.punkte} Pkt</li>`
         ).join("");
 
-    document
-        .querySelector("#auswertung button")
-        .style.display="none";
-
+    // Button verstecken, da das Spiel vorbei ist
+    const btn = document.querySelector("#auswertung button");
+    if (btn) btn.style.display = "none";
 });
-
 </script>
 
 </body>
