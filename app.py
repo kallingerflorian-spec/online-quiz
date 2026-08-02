@@ -163,7 +163,7 @@ def start_game():
         return
 
     game["started"] = True
-    game["timer"] = 20
+    game["timer"] = 60
 
     for name in answers:
         answers[name] = False
