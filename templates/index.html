@@ -1,33 +1,199 @@
 <!DOCTYPE html>
 <html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Kahoot Reihenfolge</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<head>
+
+<meta charset="UTF-8">
+
+<title>Online Quiz</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
 </head>
+
 <body>
 
 <div class="container">
 
-    <h1>{{ question }}</h1>
+<h1>🎮 Online Quiz</h1>
 
-    <ul id="list">
-        {% for item in items %}
-        <li class="card">{{ item }}</li>
-        {% endfor %}
-    </ul>
+<div id="login">
 
-    <button onclick="checkOrder()">
-        Antwort prüfen
-    </button>
+<input
+id="name"
+type="text"
+placeholder="Dein Name">
 
-    <div id="result"></div>
+<input
+id="pin"
+type="text"
+placeholder="Spielcode">
+
+<button id="join">
+Beitreten
+</button>
 
 </div>
 
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+<div id="waiting" style="display:none;">
+
+<h2>⏳ Warten auf den Host...</h2>
+
+</div>
+
+<div id="game" style="display:none;">
+
+<h2 id="question"></h2>
+
+<h3>
+
+Zeit:
+<span id="timer">20</span>
+
+</h3>
+
+<ul id="list">
+
+</ul>
+
+<button id="submit">
+
+Antwort senden
+
+</button>
+
+</div>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+
+const socket = io();
+
+let sortable;
+
+// -----------------------------
+
+document.getElementById("join").onclick=function(){
+
+    const name=document.getElementById("name").value;
+
+    socket.emit("join",{
+        name:name
+    });
+
+}
+
+// -----------------------------
+
+socket.on("joined",function(){
+
+    document.getElementById("login").style.display="none";
+
+    document.getElementById("waiting").style.display="block";
+
+});
+
+// -----------------------------
+
+socket.on("start_question",function(question){
+
+    document.getElementById("waiting").style.display="none";
+
+    document.getElementById("game").style.display="block";
+
+    document.getElementById("question").innerHTML=question.title;
+
+    const list=document.getElementById("list");
+
+    list.innerHTML="";
+
+    let items=[...question.correct_order];
+
+    items.sort(()=>Math.random()-0.5);
+
+    items.forEach(function(item){
+
+        const li=document.createElement("li");
+
+        li.className="card";
+
+        li.innerHTML=item;
+
+        list.appendChild(li);
+
+    });
+
+    sortable=new Sortable(list,{
+        animation:150
+    });
+
+});
+
+// -----------------------------
+
+socket.on("timer",function(data){
+
+    document.getElementById("timer").innerHTML=data.time;
+
+});
+
+// -----------------------------
+
+socket.on("time_up",function(){
+
+    document.getElementById("submit").disabled=true;
+
+});
+
+// -----------------------------
+
+document.getElementById("submit").onclick=function(){
+
+    const cards=document.querySelectorAll("#list li");
+
+    let order=[];
+
+    cards.forEach(function(card){
+
+        order.push(card.innerHTML);
+
+    });
+
+    socket.emit("submit_order",{
+
+        order:order
+
+    });
+
+    document.getElementById("submit").disabled=true;
+
+}
+
+// -----------------------------
+
+socket.on("leaderboard",function(data){
+
+    let html="<h2>🏆 Rangliste</h2>";
+
+    data.forEach(function(player){
+
+        html+="<p>"+player.name+" : "+player.score+"</p>";
+
+    });
+
+    document.getElementById("result").innerHTML=html;
+
+});
+
+</script>
 
 </body>
+
 </html>
