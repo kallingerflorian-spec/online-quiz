@@ -43,7 +43,7 @@ answers = {}
 game = {
     "pin": "",
     "started": False,
-    "timer": 20,
+    "timer": 60,
     "question": 0
 }
 
