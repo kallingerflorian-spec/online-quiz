@@ -82,6 +82,22 @@ def countdown():
     show_results()
 
 
+@socketio.on("restart_game")
+def restart_game():
+
+    global game
+
+    game["started"] = False
+    game["timer"] = 20
+    game["question"] = 0
+    game["pin"] = generate_pin()   # Optional: neuer Spielcode
+
+    players.clear()
+    scores.clear()
+    answers.clear()
+
+    socketio.emit("game_restarted")
+
 
 def generate_pin():
     return "".join(random.choices(string.digits, k=6))
