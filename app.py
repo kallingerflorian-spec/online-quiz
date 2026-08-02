@@ -3,11 +3,10 @@ import time
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
-# static_folder wird explizit definiert, um dein lokales Röntgenbild auszuliefern
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = 'quiz-ultra-secret-123!'
 
-# Ohne async_mode Parameter – wählt automatisch das installierte simple-websocket
+# Native websocket handling via simple-websocket without strict sync_modes
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 fragen = [
