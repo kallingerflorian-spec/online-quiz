@@ -2,265 +2,134 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz - Smartphone</title>
+    <title>Kahoot Host - Beamer Ansicht</title>
     <script src="https://jsdelivr.net"></script>
     <script src="https://cloudflare.com"></script>
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col justify-center items-center p-4 select-none">
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center justify-center p-6">
 
-    <div id="join-screen" class="w-full max-w-sm text-center">
-        <h1 class="text-4xl font-black mb-6 text-purple-400">Mitspielen</h1>
-        <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
-            <input id="nickname" type="text" placeholder="Dein Name" class="w-full p-3 rounded-xl bg-gray-700 border border-gray-600 text-center text-xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4" maxlength="15">
-            <button onclick="joinen()" class="w-full bg-purple-600 hover:bg-purple-700 font-bold text-xl py-3 rounded-xl transition duration-200">Verbinden</button>
+    <!-- LOBBY SCREEN -->
+    <div id="lobby" class="text-center w-full max-w-2xl">
+        <h1 class="text-5xl font-black mb-4 text-purple-400">Röntgen-Quiz</h1>
+        <p class="text-xl mb-8 text-gray-300">Öffne den Link auf deinem Smartphone!</p>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4">Eingeloggte Mitarbeiter:</h2>
+            <ul id="spieler-liste" class="flex flex-wrap gap-3 justify-center text-lg font-semibold"></ul>
         </div>
+        <button onclick="naechsteFrage()" class="mt-8 bg-green-500 hover:bg-green-600 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg">Quiz starten</button>
     </div>
 
-    <div id="warten-screen" class="hidden text-center">
-        <div class="animate-pulse text-6xl mb-4">📡</div>
-        <h1 class="text-2xl font-bold mb-2">Eingeloggt!</h1>
-        <p class="text-gray-400">Schau auf das Haupt-Display...</p>
-    </div>
-
-    <div id="spieler-timer-container" class="hidden fixed top-0 left-0 w-full bg-gray-800 p-2 z-50">
-        <div class="w-full bg-gray-700 h-3 rounded-full overflow-hidden">
-            <div id="timer-balken-spieler" class="bg-red-500 h-full w-full transition-all linear duration-1000"></div>
-        </div>
-    </div>
-
-    <div id="mc-screen" class="hidden w-full max-w-xl flex flex-col pt-8">
-        <h2 id="spieler-mc-frage" class="text-lg font-bold mb-4 text-center px-2"></h2>
-        
-        <!-- Bild-Anzeige für Spieler-Handys (lokal geladen) -->
-        <div id="spieler-bild-bereich" class="hidden mb-4 flex justify-center">
-            <img id="spieler-frage-bild" src="" alt="Röntgen" class="rounded-lg max-h-44 object-contain border border-gray-700">
+    <!-- SPIEL SCREEN -->
+    <div id="spiel" class="hidden w-full max-w-4xl flex flex-col items-center">
+        <div class="w-full bg-gray-700 h-4 rounded-full mb-6 overflow-hidden max-w-3xl">
+            <div id="timer-balken-host" class="bg-red-500 h-full w-full transition-all linear duration-1000"></div>
         </div>
 
-        <div class="grid grid-cols-1 gap-3 w-full">
-            <button onclick="antwortenMC(0)" class="bg-red-500 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">▲</span><span id="mc-text-0"></span></button>
-            <button onclick="antwortenMC(1)" class="bg-blue-500 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">◆</span><span id="mc-text-1"></span></button>
-            <button onclick="antwortenMC(2)" class="bg-yellow-500 text-gray-900 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">●</span><span id="mc-text-2"></span></button>
-            <button onclick="antwortenMC(3)" class="bg-green-500 p-3 rounded-xl text-left font-bold text-sm shadow-lg flex items-center active:scale-95 transition"><span class="mr-3 text-lg">■</span><span id="mc-text-3"></span></button>
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl mb-6 w-full max-w-3xl text-center">
+            <span id="frage-nummer" class="text-purple-400 font-bold uppercase tracking-wider text-sm block mb-1"></span>
+            <h1 id="frage-text" class="text-2xl font-extrabold px-4"></h1>
         </div>
+
+        <div id="bild-bereich" class="hidden mb-6 w-full max-w-md flex justify-center">
+            <div class="bg-gray-800 p-2 rounded-xl shadow-xl border border-gray-700">
+                <img id="frage-bild" src="" alt="Röntgenbild" class="rounded-lg max-h-72 w-full object-contain mx-auto">
+            </div>
+        </div>
+
+        <div id="antwort-matrix" class="grid grid-cols-2 gap-4 text-left text-lg font-bold w-full max-w-3xl"></div>
     </div>
 
-    <div id="puzzle-screen" class="hidden w-full max-w-md bg-gray-800 p-5 rounded-2xl shadow-2xl pt-8">
-        <h2 id="spieler-puzzle-frage" class="text-base font-bold mb-4 text-purple-400 text-center"></h2>
-        <div id="puzzle-liste" class="space-y-3 mb-5"></div>
-        <button onclick="antwortenPuzzle()" class="w-full bg-green-500 hover:bg-green-600 font-bold text-lg py-3 rounded-xl transition shadow-md">Zuordnung abschicken</button>
+    <!-- AUSWERTUNG SCREEN -->
+    <div id="auswertung" class="hidden w-full max-w-2xl text-center">
+        <h1 class="text-2xl font-black mb-6 text-yellow-400">Auflösung:<br><span id="richtige-antwort-text" class="text-white text-xl font-normal block mt-2"></span></h1>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Aktueller Stand:</h2>
+            <ol id="rangliste" class="text-left text-lg space-y-2 max-h-64 overflow-y-auto"></ol>
+        </div>
+        <button onclick="naechsteFrage()" class="mt-8 bg-purple-600 hover:bg-purple-700 text-white text-xl font-bold py-3 px-8 rounded-full shadow-lg">Nächste Runde</button>
     </div>
 
-    <div id="blockiert-screen" class="hidden text-center">
-        <div class="text-5xl mb-4">🔒</div>
-        <h1 class="text-xl font-bold">Antwort registriert!</h1>
-        <p class="text-gray-400 mt-1">Warten auf die Kollegen...</p>
+    <!-- ENDE SCREEN -->
+    <div id="ende" class="hidden text-center w-full max-w-md">
+        <h1 class="text-5xl font-black text-yellow-400 mb-6">🏆 Podest 🏆</h1>
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl border-4 border-yellow-500">
+            <ol id="podest" class="text-2xl font-bold space-y-4"></ol>
+        </div>
     </div>
 
     <script>
         const socket = io();
-        let aktuellePuzzleItems = [];
-        let spielerTimer;
+        let hostTimer;
 
-        function joinen() {
-            const name = document.getElementById('nickname').value.trim();
-            if(name) {
-                socket.emit('join', name);
-                switchScreen('warten-screen');
-            }
-        }
+        socket.on('connect', () => { socket.emit('beamer_bereit'); });
 
-        socket.on('spiel_start', (payload) => {
-            clearInterval(spielerTimer);
-            document.getElementById('spieler-timer-container').classList.remove('hidden');
+        socket.on('spieler_liste', (liste) => {
+            document.getElementById('spieler-liste').innerHTML = liste.map(n => `<li class="bg-purple-600 px-4 py-2 rounded-full shadow">${n}</li>`).join('');
+        });
+
+        socket.on('zeige_frage', (daten) => {
+            clearInterval(hostTimer);
+            switchScreen('spiel');
+            document.getElementById('frage-nummer').innerText = `Aufgabe ${daten.nummer}`;
+            document.getElementById('frage-text').innerText = daten.frage;
             
-            let zeitLinks = payload.daten.zeit;
-            const balken = document.getElementById('timer-balken-spieler');
+            const bildBereich = document.getElementById('bild-bereich');
+            const bildTag = document.getElementById('frage-bild');
+            if (daten.bild_pfad) { 
+                bildTag.src = daten.bild_pfad;
+                bildBereich.classList.remove('hidden'); 
+            } else { 
+                bildBereich.classList.add('hidden'); 
+            }
+
+            const matrix = document.getElementById('antwort-matrix');
+            matrix.innerHTML = '';
+
+            if (daten.typ === 'mc') {
+                const farbKlassen = ["bg-red-500", "bg-blue-500", "bg-yellow-500 text-gray-900", "bg-green-500"];
+                const symbole = ["▲", "◆", "●", "■"];
+                daten.antworten.forEach((ant, i) => {
+                    matrix.innerHTML += `<div class="p-4 rounded-xl ${farbKlassen[i]} flex items-center shadow-md"><span class="mr-4 text-2xl">${symbole[i]}</span> <span>${ant}</span></div>`;
+                });
+            } else if (daten.typ === 'puzzle') {
+                daten.items.forEach((item) => {
+                    matrix.innerHTML += `<div class="p-4 rounded-xl bg-gray-800 border border-purple-500 flex justify-between items-center shadow-md w-full col-span-2"><span>${item}</span></div>`;
+                });
+            }
+
+            let zeitLinks = daten.zeit;
+            const balken = document.getElementById('timer-balken-host');
             balken.style.width = '100%';
-            spielerTimer = setInterval(() => {
+            
+            hostTimer = setInterval(() => {
                 zeitLinks--;
-                balken.style.width = `${(zeitLinks / payload.daten.zeit) * 100}%`;
-                if(zeitLinks <= 0) { clearInterval(spielerTimer); }
+                balken.style.width = `${(zeitLinks / daten.zeit) * 100}%`;
+                if(zeitLinks <= 0) {
+                    clearInterval(hostTimer);
+                    socket.emit('zeit_abgelaufen');
+                }
             }, 1000);
-
-            if (payload.typ === 'mc') {
-                switchScreen('mc-screen');
-                document.getElementById('spieler-mc-frage').innerText = payload.daten.frage;
-                
-                const imgArea = document.getElementById('spieler-bild-bereich');
-                const imgTag = document.getElementById('spieler-frage-bild');
-                if(payload.daten.bild_pfad) {
-                    imgTag.src = payload.daten.bild_pfad;
-                    imgArea.classList.remove('hidden');
-                } else {
-                    imgArea.classList.add('hidden');
-                }
-
-                for(let i=0; i<4; i++) {
-                    document.getElementById(`mc-text-${i}`).innerText = payload.daten.antworten[i];
-                }
-            } else if (payload.typ === 'puzzle') {
-                switchScreen('puzzle-screen');
-                document.getElementById('spieler-puzzle-frage').innerText = payload.daten.frage;
-                aktuellePuzzleItems = payload.daten.items;
-                const container = document.getElementById('puzzle-liste');
-                container.innerHTML = '';
-                
-                aktuellePuzzleItems.forEach((item, idx) => {
-                    container.innerHTML += `
-                        <div class="flex justify-between items-center bg-gray-700 p-3 rounded-xl border border-gray-600">
-                            <span class="font-semibold text-xs truncate max-w-xs pr-1">${item}</span>
-                            <select id="sel-${idx}" class="bg-gray-900 text-white rounded p-1.5 text-xs">
-                                <option value="Rot">Rot</option>
-                                <option value="Weiß">Weiß</option>
-                                <option value="Blau">Blau</option>
-                                <option value="Gelb">Gelb</option>
-                            </select>
-                        </div>
-                    `;
-                });
-            }
         });
 
-        function antwortenMC(index) {
-            socket.emit('antwort_abgeben', { antwort_index: index });
-            switchScreen('blockiert-screen');
-        }
-
-        function antwortenPuzzle() {
-            const loesung = [];
-            aktuellePuzzleItems.forEach((_, idx) => {
-                loesung.push(document.getElementById(`sel-${idx}`).value);
-            });
-            socket.emit('antwort_abgeben', { loesung: loesung });
-            switchScreen('blockiert-screen');
-        }
-
-        socket.on('zeige_auswertung', () => { 
-            clearInterval(spielerTimer);
-            document.getElementById('spieler-timer-container').classList.add('hidden');
-            switchScreen('warten-screen'); 
+        socket.on('zeige_auswertung', (daten) => {
+            clearInterval(hostTimer);
+            switchScreen('auswertung');
+            document.getElementById('richtige-antwort-text').innerText = daten.loesung;
+            document.getElementById('rangliste').innerHTML = daten.rangliste.map((s, idx) => `<li class="flex justify-between py-1 border-b border-gray-700"><span>${idx+1}. ${s.name}</span><span class="font-bold text-purple-400">${s.punkte} Pkt</span></li>`).join('');
         });
-        
-        socket.on('spiel_ende', () => { 
-            clearInterval(spielerTimer);
-            document.getElementById('spieler-timer-container').classList.add('hidden');
-            switchScreen('warten-screen'); 
+
+        socket.on('spiel_ende', (rangliste) => {
+            switchScreen('ende');
+            document.getElementById('podest').innerHTML = rangliste.slice(0,3).map((s, idx) => `
+                <li class="flex justify-between items-center p-3 rounded-lg ${idx===0?'bg-yellow-600 text-white':idx===1?'bg-gray-400 text-gray-900':'bg-amber-700 text-white'}">
+                    <span>${idx+1}. ${s.name}</span><span>${s.punkte} Pkt</span>
+                </li>`).join('');
         });
+
+        function naechsteFrage() { socket.emit('naechste_frage'); }
 
         function switchScreen(id) {
-            ['join-screen', 'warten-screen', 'mc-screen', 'puzzle-screen', 'blockiert-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz - Abgabe</title>
-    <script src="https://jsdelivr.net"></script>
-    <script src="https://cloudflare.com"></script>
-</head>
-<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col justify-center items-center p-4 select-none">
-
-    <!-- LOGIN -->
-    <div id="join-screen" class="w-full max-w-sm text-center">
-        <h1 class="text-4xl font-black mb-6 text-purple-400">Mitspielen</h1>
-        <div class="bg-gray-800 p-6 rounded-2xl shadow-xl">
-            <input id="nickname" type="text" placeholder="Dein Name" class="w-full p-3 rounded-xl bg-gray-700 border border-gray-600 text-center text-xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4" maxlength="15">
-            <button onclick="joinen()" class="w-full bg-purple-600 hover:bg-purple-700 font-bold text-xl py-3 rounded-xl transition duration-200">Verbinden</button>
-        </div>
-    </div>
-
-    <!-- WARTEN -->
-    <div id="warten-screen" class="hidden text-center">
-        <div class="animate-pulse text-6xl mb-4">📡</div>
-        <h1 class="text-2xl font-bold mb-2">Erfolgreich eingeloggt!</h1>
-        <p class="text-gray-400">Blick auf den Beamer richten...</p>
-    </div>
-
-    <!-- MULTIPLE CHOICE SWITCH -->
-    <div id="mc-screen" class="hidden w-full h-screen fixed inset-0 p-3 grid grid-cols-2 grid-rows-2 gap-3">
-        <button onclick="antwortenMC(0)" class="bg-red-500 rounded-2xl text-5xl shadow-lg">▲</button>
-        <button onclick="antwortenMC(1)" class="bg-blue-500 rounded-2xl text-5xl shadow-lg">◆</button>
-        <button onclick="antwortenMC(2)" class="bg-yellow-500 rounded-2xl text-5xl shadow-lg text-gray-900">●</button>
-        <button onclick="antwortenMC(3)" class="bg-green-500 rounded-2xl text-5xl shadow-lg">■</button>
-    </div>
-
-    <!-- PUZZLE / ZUORDNUNG SCREEN -->
-    <div id="puzzle-screen" class="hidden w-full max-w-md bg-gray-800 p-5 rounded-2xl shadow-2xl">
-        <h2 class="text-xl font-bold mb-4 text-purple-400 text-center">Ordne die Farben zu:</h2>
-        <div id="puzzle-liste" class="space-y-4 mb-6"></div>
-        <button onclick="antwortenPuzzle()" class="w-full bg-green-500 hover:bg-green-600 font-bold text-lg py-3 rounded-xl transition shadow-md">Zuordnung abschicken</button>
-    </div>
-
-    <!-- REGISTERED LOCK -->
-    <div id="blockiert-screen" class="hidden text-center">
-        <div class="text-5xl mb-4">verriegelt 🔒</div>
-        <h1 class="text-xl font-bold">Deine Antwort ist im Kasten!</h1>
-        <p class="text-gray-400 mt-1">Warten auf die restlichen Kollegen...</p>
-    </div>
-
-    <script>
-        const socket = io();
-        let aktuellePuzzleItems = [];
-
-        function joinen() {
-            const name = document.getElementById('nickname').value.trim();
-            if(name) {
-                socket.emit('join', name);
-                switchScreen('warten-screen');
-            }
-        }
-
-        socket.on('spiel_start', (payload) => {
-            if (payload.typ === 'mc') {
-                switchScreen('mc-screen');
-            } else if (payload.typ === 'puzzle') {
-                switchScreen('puzzle-screen');
-                aktuellePuzzleItems = payload.daten.items;
-                const container = document.getElementById('puzzle-liste');
-                container.innerHTML = '';
-                
-                aktuellePuzzleItems.forEach((item, idx) => {
-                    container.innerHTML += `
-                        <div class="flex justify-between items-center bg-gray-700 p-3 rounded-xl border border-gray-600">
-                            <span class="font-semibold text-sm truncate max-w-xs">${item}</span>
-                            <select id="sel-${idx}" class="bg-gray-900 text-white rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500">
-                                <option value="Rot">Rot</option>
-                                <option value="Weiß">Weiß</option>
-                                <option value="Blau">Blau</option>
-                                <option value="Gelb">Gelb</option>
-                            </select>
-                        </div>
-                    `;
-                });
-            }
-        });
-
-        function antwortenMC(index) {
-            socket.emit('antwort_abgeben', { antwort_index: index });
-            switchScreen('blockiert-screen');
-        }
-
-        function antwortenPuzzle() {
-            const loesung = [];
-            aktuellePuzzleItems.forEach((_, idx) => {
-                const val = document.getElementById(`sel-${idx}`).value;
-                loesung.push(val);
-            });
-            socket.emit('antwort_abgeben', { loesung: loesung });
-            switchScreen('blockiert-screen');
-        }
-
-        socket.on('zeige_auswertung', () => { switchScreen('warten-screen'); });
-        socket.on('spiel_ende', () => { switchScreen('warten-screen'); });
-
-        function switchScreen(id) {
-            ['join-screen', 'warten-screen', 'mc-screen', 'puzzle-screen', 'blockiert-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            ['lobby', 'spiel', 'auswertung', 'ende'].forEach(s => document.getElementById(s).classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
         }
     </script>
