@@ -2,6 +2,113 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kahoot Spieler</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #250b4c; color: white; padding: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .btn { height: 120px; font-size: 22px; border: none; color: white; border-radius: 8px; font-weight: bold; }
+        .A { background: #e21b3c; } .B { background: #1368ce; } .C { background: #d89e00; } .D { background: #26890c; }
+        input { font-size: 18px; padding: 8px; width: 80%; border-radius: 5px; border: none; }
+        #selection-display { font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; margin: 10px 0; min-height: 30px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="setup">
+        <h2>Gib deinen Namen ein:</h2>
+        <input type="text" id="username" placeholder="Dein Name...">
+        <br><br>
+        <button style="padding:10px 20px; font-size:18px;" onclick="ready()">Beitreten</button>
+    </div>
+
+    <div id="game" class="hidden">
+        <h2 id="question-text">Warte auf den Host...</h2>
+        <div id="sort-controls" class="hidden">
+            <p>Deine Reihenfolge:</p>
+            <div id="selection-display"></div>
+            <button onclick="clearSelection()" style="background:#666; color:white; border:none; padding:5px 10px; border-radius:4px;">Löschen</button>
+        </div>
+        
+        <div class="grid" id="options-grid">
+            <button class="btn A" onclick="pressOption('A')">A</button>
+            <button class="btn B" onclick="pressOption('B')">B</button>
+            <button class="btn C" onclick="pressOption('C')">C</button>
+            <button class="btn D" onclick="pressOption('D')">D</button>
+        </div>
+    </div>
+
+    <script>
+        const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+        const ws = new WebSocket(protocol + window.location.host + "/ws/player");
+        
+        let currentQType = "";
+        let currentSelection = "";
+
+        function ready() {
+            if(document.getElementById("username").value.trim() !== "") {
+                document.getElementById("setup").classList.add("hidden");
+                document.getElementById("game").classList.remove("hidden");
+            }
+        }
+
+        ws.onmessage = function(event) {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "question") {
+                currentQType = msg.data.type;
+                currentSelection = "";
+                document.getElementById("selection-display").innerText = "";
+                document.getElementById("question-text").innerText = msg.data.question;
+                
+                if (currentQType === "sort") {
+                    document.getElementById("sort-controls").classList.remove("hidden");
+                } else {
+                    document.getElementById("sort-controls").classList.add("hidden");
+                }
+                document.getElementById("game").style.opacity = "1";
+                document.getElementById("game").style.pointerEvents = "auto";
+            } else if (msg.type === "game_over") {
+                document.getElementById("question-text").innerText = "Spiel vorbei! Schau auf den Hauptbildschirm.";
+                document.getElementById("options-grid").style.opacity = "0.3";
+            }
+        };
+
+        function pressOption(letter) {
+            if (currentQType === "sort") {
+                if (!currentSelection.includes(letter)) {
+                    currentSelection += letter;
+                    document.getElementById("selection-display").innerText = currentSelection;
+                }
+                if (currentSelection.length === 4) {
+                    sendAnswer(currentSelection);
+                }
+            } else {
+                sendAnswer(letter);
+            }
+        }
+
+        function clearSelection() {
+            currentSelection = "";
+            document.getElementById("selection-display").innerText = "";
+        }
+
+        function sendAnswer(ans) {
+            const name = document.getElementById("username").value;
+            ws.send(JSON.stringify({
+                type: "answer",
+                player: name,
+                answer: ans
+            }));
+            document.getElementById("game").style.opacity = "0.5";
+            document.getElementById("game").style.pointerEvents = "none";
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
     <title>Kahoot Spieler</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; }
