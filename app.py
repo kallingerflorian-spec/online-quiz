@@ -1,5 +1,12 @@
 from flask import Flask, render_template, request, jsonify
+from flask import render_template
 
+GAME_URL = "https://online-quiz-xe6u.onrender.com"
+
+@app.route("/host")
+def host():
+    return render_template("host.html", game_url=GAME_URL)
+    
 app = Flask(__name__)
 
 # Beispiel-Reihenfolgefrage
