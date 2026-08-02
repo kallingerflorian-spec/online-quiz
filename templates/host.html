@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
+
 <meta charset="UTF-8">
-<title>Host</title>
+
+<title>Quiz Host</title>
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 </head>
 
@@ -12,29 +17,184 @@
 
 <div class="container">
 
-<h1>🎮 Host</h1>
+<h1>🎮 Quiz Host</h1>
+
+<div class="host-top">
+
+<div class="pin-box">
+
+<h2>Spielcode</h2>
+
+<h1 id="pin">{{ pin }}</h1>
+
+</div>
+
 <div class="qr-box">
 
-    <h2>📱 QR-Code scannen</h2>
+<img
+src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ game_url }}"
+alt="QR-Code">
 
-    <img
-        src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ game_url }}"
-        alt="QR">
-
-    <p>oder besuche</p>
-
-    <b>{{ game_url }}</b>
+<p>{{ game_url }}</p>
 
 </div>
 
-  
-<p>Spiel läuft.</p>
+</div>
 
-<a class="button" href="/">
-Spieleransicht öffnen
-</a>
+<hr>
+
+<h2>👥 Spieler</h2>
+
+<div id="players">
+
+Noch keine Spieler.
 
 </div>
+
+<hr>
+
+<h2>
+
+⏱ Zeit:
+
+<span id="timer">
+
+20
+
+</span>
+
+</h2>
+
+<button id="start">
+
+▶ Spiel starten
+
+</button>
+
+<hr>
+
+<h2>Antworten</h2>
+
+<div id="answers">
+
+Noch keine Antworten.
+
+</div>
+
+<hr>
+
+<h2>🏆 Rangliste</h2>
+
+<div id="leaderboard">
+
+Noch keine Punkte.
+
+</div>
+
+</div>
+
+<script>
+
+const socket = io();
+
+socket.emit("host_request_players");
+
+// ----------------------------
+
+document.getElementById("start").onclick=function(){
+
+    socket.emit("start_game");
+
+    this.disabled=true;
+
+}
+
+// ----------------------------
+
+socket.on("player_list",function(players){
+
+    let html="";
+
+    players.forEach(function(player){
+
+        html+="<div class='card'>👤 "+player+"</div>";
+
+    });
+
+    if(players.length===0){
+
+        html="Noch keine Spieler.";
+
+    }
+
+    document.getElementById("players").innerHTML=html;
+
+});
+
+// ----------------------------
+
+socket.on("timer",function(data){
+
+    document.getElementById("timer").innerHTML=data.time;
+
+});
+
+// ----------------------------
+
+socket.on("answer_update",function(data){
+
+    let area=document.getElementById("answers");
+
+    let status=data.correct ? "✅" : "❌";
+
+    area.innerHTML +=
+
+    "<div class='card'>"
+
+    +data.player+
+
+    " "
+
+    +status+
+
+    "</div>";
+
+});
+
+// ----------------------------
+
+socket.on("leaderboard",function(ranking){
+
+    let html="";
+
+    ranking.forEach(function(player,index){
+
+        html+=
+
+        "<div class='card'>"
+
+        +(index+1)+
+
+        ". "
+
+        +player.name+
+
+        " - "
+
+        +player.score+
+
+        " Punkte"
+
+        +"</div>";
+
+    });
+
+    document.getElementById("leaderboard").innerHTML=html;
+
+});
+
+</script>
 
 </body>
+
 </html>
