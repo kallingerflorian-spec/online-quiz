@@ -3,11 +3,11 @@ import time
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
-# static_folder wird explizit definiert, damit das lokale Bild sauber geladen wird
+# static_folder wird explizit definiert, um dein lokales Röntgenbild auszuliefern
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = 'quiz-ultra-secret-123!'
 
-# Wichtig für Render: Erlaube alle Verbindungen
+# Ohne async_mode Parameter – wählt automatisch das installierte simple-websocket
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 fragen = [
@@ -45,7 +45,7 @@ fragen = [
             "Du rufst im MR an, ob ein Ladegerät fehlt"
         ],
         "a": 3,
-        "bild_pfad": "/static/lws_fremdkoerper.jpg" # Greift lokal auf den static-Ordner zu
+        "bild_pfad": "/static/lws_fremdkoerper.jpg"
     }
 ]
 
