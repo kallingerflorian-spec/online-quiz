@@ -43,7 +43,7 @@ answers = {}
 game = {
     "pin": "",
     "started": False,
-    "timer": 60,
+    "timer": 30,
     "question": 0
 }
 
@@ -163,7 +163,7 @@ def start_game():
         return
 
     game["started"] = True
-    game["timer"] = 60
+    game["timer"] = 30
 
     for name in answers:
         answers[name] = False
