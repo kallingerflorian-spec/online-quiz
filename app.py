@@ -494,5 +494,10 @@ def beende_runde():
         "rangliste": aktuelle_rangliste
     }, broadcast=True)
 
+# KORRIGIERT FÜR DIE AKTUELLE VERSION: Importiert 'Middleware' statt 'WSGIMiddleware'
+from engineio.middleware import Middleware
+asgi_app = Middleware(socketio, app)
+
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+
